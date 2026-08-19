@@ -1,0 +1,47 @@
+{
+  "name": "konekt",
+  "version": "0.1.0",
+  "description": "Minimal WalletConnect v2 EVM provider",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./eip155": "./src/chains/eip155.ts",
+    "./solana": "./src/chains/solana.ts",
+    "./bip122": "./src/chains/bip122.ts",
+    "./cosmos": "./src/chains/cosmos.ts",
+    "./generic": "./src/chains/generic.ts",
+    "./siwe": "./src/features/siwe.ts",
+    "./cacao": "./src/features/cacao.ts",
+    "./http": "./src/http.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "node --env-file=../../.env --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "@noble/ciphers": "^1.3.0",
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.9",
+    "@types/node": "^24.3.0",
+    "@types/ws": "^8.18.1",
+    "@walletconnect/relay-auth": "1.1.0",
+    "@walletconnect/sign-client": "2.23.10",
+    "@walletconnect/utils": "2.23.10",
+    "hardhat": "^2.26.3",
+    "typescript": "^5.9.2",
+    "viem": "^2.55.18",
+    "ws": "^8.18.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

@@ -1,0 +1,364 @@
+@font-face {
+  font-family: "KHTeka";
+  src: url("https://fonts.reown.com/KHTeka-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KHTeka";
+  src: url("https://fonts.reown.com/KHTeka-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KHTekaMono";
+  src: url("https://fonts.reown.com/KHTekaMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #171717;
+  --panel: #202020;
+  --surface: #252525;
+  --surface-hover: #2a2a2a;
+  --line: #2a2a2a;
+  --line-strong: #363636;
+  --text: #ffffff;
+  --subtle: #bbbbbb;
+  --muted: #9a9a9a;
+  --accent: #0988f0;
+  --accent-soft: rgb(9 136 240 / 15%);
+  --success: #30a46b;
+  --danger: #df4a34;
+  --danger-soft: rgb(223 74 52 / 20%);
+  --radius: 24px;
+  --radius-m: 16px;
+  --radius-s: 12px;
+  --radius-round: 128px;
+  --ease: cubic-bezier(0.23, 0.09, 0.08, 1.13);
+  font-family: KHTeka, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  transition:
+    background-color 200ms var(--ease),
+    border-color 200ms var(--ease),
+    color 200ms var(--ease),
+    scale 200ms var(--ease);
+}
+
+button:active:not(:disabled) {
+  scale: 0.975;
+}
+
+code,
+.mono {
+  font-family: KHTekaMono, ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 28px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 2.25rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.badge {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 16px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-round);
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #2f9cf3;
+}
+
+.btn.ghost {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.btn.danger {
+  background: transparent;
+  color: var(--danger);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.method {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 168px;
+  border-radius: var(--radius-m);
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.method code {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.method span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kv {
+  display: grid;
+  gap: 8px;
+}
+
+.kv div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 13px;
+}
+
+.kv dt {
+  color: var(--muted);
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.kv dd.stack {
+  display: grid;
+  gap: 3px;
+}
+
+.kv dt .count {
+  opacity: 0.6;
+}
+
+.banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: var(--radius-m);
+  background: var(--accent-soft);
+}
+
+.pre {
+  margin: 0;
+  max-height: 280px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.45;
+  background: var(--bg);
+  border-radius: var(--radius-m);
+  padding: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pre.ok {
+  color: var(--success);
+}
+
+.pre.err {
+  color: var(--danger);
+}
+
+.log {
+  max-height: 360px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log article {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-size: 12px;
+}
+
+.log b {
+  font-weight: 500;
+  color: var(--accent);
+}
+
+input[type="text"],
+input[type="number"] {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: var(--radius-m);
+  padding: 10px 12px;
+  min-width: 140px;
+  flex: 1;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.peer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.peer img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-s);
+}
+
+.chip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:has(input:checked) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chip input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .grid,
+  .hero,
+  .kv div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled) {
+    scale: 1;
+  }
+}
