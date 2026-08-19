@@ -1,16 +1,27 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { themeAttribute, uiClass, type WcAppearanceProps } from "./appearance.ts";
 
+/** Props for the accessible dialog shell used by konekt-ui. */
 export type ModalProps = WcAppearanceProps & {
+  /** Whether the dialog is rendered. */
   open: boolean;
+  /** Accessible dialog label. Render the same title visibly in `children`. */
   title: string;
+  /** Called for Escape, backdrop activation, and close controls supplied by the child content. */
   onClose: () => void;
+  /** Dialog content. */
   children: ReactNode;
 };
 
 const focusable =
   'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
+/**
+ * Accessible modal shell with focus management and a dismissible backdrop.
+ *
+ * When open, it moves focus to the first control, traps Tab navigation, closes on Escape, prevents
+ * page scrolling, and restores the element that was focused previously.
+ */
 export function Modal({ open, title, onClose, children, className, style, theme, unstyled }: ModalProps) {
   const dialog = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);

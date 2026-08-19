@@ -4,14 +4,20 @@
   "scripts": {
     "dev": "pnpm --filter example dev",
     "dev:showcase": "pnpm --filter showcase dev",
+    "dev:docs": "pnpm --filter docs dev",
+    "docs:build": "pnpm --filter docs build",
     "test": "pnpm --filter konekt test && pnpm --filter konekt-ui test",
     "typecheck": "pnpm -r typecheck",
+    "size": "size-limit",
     "lint": "biome check .",
     "format": "biome format --write .",
     "push": "git remote remove publish 2>/dev/null || true; git remote add publish git@github-personal:lsheva/konekt.git; trap 'git remote remove publish 2>/dev/null || true' EXIT; git push publish HEAD --follow-tags"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.9"
+    "@biomejs/biome": "2.5.9",
+    "@size-limit/esbuild": "^13.0.3",
+    "@size-limit/file": "^13.0.3",
+    "size-limit": "^13.0.3"
   },
   "engines": {
     "node": ">=24"

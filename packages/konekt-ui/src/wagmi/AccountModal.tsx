@@ -6,10 +6,15 @@ import { uiClass, type WcAppearanceProps } from "../appearance.ts";
 import { Icon } from "../Icon.tsx";
 import { Modal } from "../Modal.tsx";
 
+/** Props for the wagmi account and network dialog. */
 export type AccountModalProps = WcAppearanceProps & {
+  /** Whether the dialog is rendered. */
   open: boolean;
+  /** Content shown when the dialog opens. */
   view: "account" | "networks";
+  /** Requests that the controlling component close the dialog. */
   onClose: () => void;
+  /** Requests a switch between account details and the network list. */
   onView: (view: "account" | "networks") => void;
 };
 
@@ -19,6 +24,12 @@ function formattedBalance(value: bigint, decimals: number, symbol: string): stri
   return `${formatted} ${symbol}`;
 }
 
+/**
+ * Displays the active wagmi account or configured EVM networks.
+ *
+ * The account view can copy the address and disconnect. The network view calls wagmi's
+ * `switchChain` action while keeping the wallet connected.
+ */
 export function AccountModal({ open, view, onClose, onView, className, style, theme, unstyled }: AccountModalProps) {
   const { address, chainId } = useConnection();
   const { disconnect } = useDisconnect();

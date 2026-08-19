@@ -1,0 +1,1 @@
+../../../packages/konekt-ui/SKILL.md

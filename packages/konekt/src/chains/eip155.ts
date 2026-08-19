@@ -15,6 +15,7 @@ import {
   type Session,
 } from "../kernel/types.ts";
 
+/** EVM methods proposed to the wallet by the built-in adapter. */
 export const METHODS = [
   "eth_sendTransaction",
   "personal_sign",
@@ -28,25 +29,40 @@ export const METHODS = [
   "wallet_switchEthereumChain",
 ] as const;
 
+/** EVM session events proposed to the wallet by the built-in adapter. */
 export const EVENTS = ["chainChanged", "accountsChanged"] as const;
 
 const LOCAL = new Set<string>(["eth_accounts", "eth_requestAccounts"]);
 
+/** Routing rules used after the adapter handles its local account and chain methods. */
 export const routes = {
   wallet: new Set<string>(METHODS.filter((m) => !LOCAL.has(m))),
   rpc: /^(eth|net|web3)_/,
 } as const;
 
+/** Destination selected for an EVM method. */
 export type MethodRoute = "wallet" | "rpc" | "unknown";
 
+/**
+ * Classifies an EVM method after local methods have been handled.
+ *
+ * Known signing, transaction, and chain-switching methods go to the wallet. Other `eth_*`,
+ * `net_*`, and `web3_*` methods use the chain's read transport. Everything else is unknown.
+ */
 export function routeMethod(method: string): MethodRoute {
   if (routes.wallet.has(method)) return "wallet";
   if (routes.rpc.test(method)) return "rpc";
   return "unknown";
 }
 
+/** Converts a decimal EVM chain ID to the hexadecimal form required by EIP-1193. */
 export const toHexChain = (id: number): Hex => `0x${id.toString(16)}`;
 
+/**
+ * Reads the target chain from `wallet_switchEthereumChain` parameters.
+ *
+ * @returns The decimal chain ID, or `undefined` when the parameters are malformed.
+ */
 export function parseSwitchChainId(params: unknown): number | undefined {
   if (!Array.isArray(params)) return;
   const head = params[0];
@@ -57,6 +73,12 @@ export function parseSwitchChainId(params: unknown): number | undefined {
   return Number.isFinite(next) ? next : undefined;
 }
 
+/**
+ * Extracts EVM state from an approved session.
+ *
+ * The first approved EVM account determines the initial chain. Duplicate addresses across approved
+ * EVM chains are returned once.
+ */
 export function parseAccounts(session: { namespaces: Session["namespaces"] } | undefined): {
   chainId: number;
   accounts: string[];
@@ -72,15 +94,24 @@ export function parseAccounts(session: { namespaces: Session["namespaces"] } | u
   return { chainId: first.chainId, accounts: [...new Set(parsed.map((p) => p.address))] };
 }
 
+/** Properties added to a provider when at least one EVM chain is configured. */
 export type EvmExt = {
+  /** Active decimal EVM chain ID. */
   chainId: number;
+  /** Unique EVM addresses approved in the current session. */
   accounts: string[];
 };
 
+/** Optional behavior shared by every chain returned from one {@link evm} call. */
 export type EvmOpts = {
+  /**
+   * JSON-RPC transport for `eth_*`, `net_*`, and `web3_*` reads after wallet methods are routed.
+   * `http(url)` from `konekt/http` is the standard transport.
+   */
   read?: ((req: RequestArguments) => Promise<unknown>) | undefined;
 };
 
+/** An EVM chain that adds {@link EvmExt} properties to its provider. */
 export type EvmChain = Chain<EvmExt>;
 
 function chainIdOf(ctx: Ctx): number {
@@ -156,6 +187,7 @@ function onEvent(name: string, data: unknown, _chainId: string | undefined, ctx:
   }
 }
 
+/** Shared EVM adapter used by chains returned from {@link evm}. */
 export const evmAdapter: ChainAdapter<EvmExt> = {
   namespace: "eip155",
   methods: [...METHODS],
@@ -178,6 +210,29 @@ export const evmAdapter: ChainAdapter<EvmExt> = {
   onEvent,
 };
 
+/**
+ * Creates EVM `Chain` objects for {@link Provider} configuration.
+ *
+ * Pass one or more decimal chain IDs and, optionally, an {@link EvmOpts} object last. The same
+ * options apply to every returned chain. Use separate calls when networks need different RPC URLs.
+ *
+ * Do not pass bare numbers to `Provider`'s `chains` option.
+ *
+ * @example One network without JSON-RPC reads
+ * ```ts
+ * chains: evm(1)
+ * ```
+ *
+ * @example Two networks with different read transports
+ * ```ts
+ * chains: [
+ *   evm(1, { read: http(ethereumRpcUrl) }),
+ *   evm(8453, { read: http(baseRpcUrl) }),
+ * ]
+ * ```
+ *
+ * @throws When no numeric chain ID is provided.
+ */
 export function evm(...args: Array<number | EvmOpts>): EvmChain[] {
   const ids: number[] = [];
   let opts: EvmOpts = {};

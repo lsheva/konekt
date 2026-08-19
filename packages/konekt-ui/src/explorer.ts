@@ -1,50 +1,72 @@
+/** Base URL of WalletConnect's public wallet listing API. */
 export const EXPLORER_URL = "https://explorer-api.walletconnect.com";
 
+/** Default WalletConnect Explorer IDs shown on the first modal screen. */
 export const FEATURED_WALLET_IDS = [
   "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
   "1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369",
   "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0",
 ] as const;
 
+/** Native-scheme and HTTPS universal links advertised for one platform. */
 export type WalletLinks = {
+  /** Custom-scheme link, for example `metamask://`. Empty when unavailable. */
   native: string;
+  /** HTTPS universal link. Empty when unavailable. */
   universal: string;
 };
 
+/** Normalized wallet listing returned by {@link fetchWallets}. */
 export type ExplorerWallet = {
+  /** WalletConnect Explorer ID. */
   id: string;
+  /** Human-readable wallet name. */
   name: string;
+  /** Reverse-domain identifier used to match an installed EIP-6963 wallet. */
   rdns: string;
+  /** Best available wallet image URL. */
   imageUrl: string;
+  /** Links advertised for mobile platforms. */
   mobile: WalletLinks;
+  /** Links advertised for desktop platforms. */
   desktop: WalletLinks;
 };
 
+/** Query options for {@link fetchWallets}. */
 export type FetchWalletsOptions = {
+  /** WalletConnect Cloud project ID. */
   projectId: string;
+  /** Maximum number of entries to request. */
   entries?: number | undefined;
+  /** One-based result page. */
   page?: number | undefined;
+  /** Wallet-name search text. */
   search?: string | undefined;
+  /** Exact WalletConnect Explorer IDs to request. */
   ids?: readonly string[] | undefined;
-  /** CAIP-2 chain ids. Only wallets that support one of them are listed. */
+  /** CAIP-2 chain IDs. Results must support at least one. */
   chains?: readonly string[] | undefined;
 };
 
+/** One normalized page from WalletConnect Explorer. */
 export type FetchWalletsResult = {
+  /** Valid wallet entries parsed from the response. */
   wallets: ExplorerWallet[];
+  /** Total matching entries reported by Explorer. */
   total: number;
 };
 
-/** Which wallets a modal may offer. Ids are explorer ids, the same ones `FEATURED_WALLET_IDS` holds. */
+/** WalletConnect Explorer filters accepted by {@link WalletModal}. */
 export type WalletFilter = {
-  /** When set, only these wallets are listed. */
+  /** When set, only these Explorer IDs are listed. */
   include?: readonly string[] | undefined;
-  /** Never listed. The explorer has no exclude parameter, so this is applied to each page it returns. */
+  /** Explorer IDs removed from each page after it is returned. */
   exclude?: readonly string[] | undefined;
-  /** Listed on the first screen. Defaults to `FEATURED_WALLET_IDS`. */
+  /** Explorer IDs listed on the first screen. Defaults to {@link FEATURED_WALLET_IDS}. */
   featured?: readonly string[] | undefined;
 };
 
+/** Applies `include` and `exclude` Explorer ID filters to an existing wallet list. */
 export function filterWallets(wallets: readonly ExplorerWallet[], filter?: WalletFilter): ExplorerWallet[] {
   const include = filter?.include;
   const exclude = filter?.exclude;
@@ -74,6 +96,11 @@ function parseImageUrl(value: unknown): string {
   return readString(o, "md") || readString(o, "sm") || readString(o, "lg");
 }
 
+/**
+ * Parses and validates one unknown WalletConnect Explorer listing.
+ *
+ * @returns A normalized wallet, or `undefined` when the value has no ID or name.
+ */
 export function parseWallet(value: unknown): ExplorerWallet | undefined {
   const o = asRecord(value);
   if (!o) return undefined;
@@ -90,6 +117,7 @@ export function parseWallet(value: unknown): ExplorerWallet | undefined {
   };
 }
 
+/** Parses a WalletConnect Explorer response, dropping malformed listings. */
 export function parseListings(body: unknown): FetchWalletsResult {
   const o = asRecord(body);
   if (!o) return { wallets: [], total: 0 };
@@ -105,6 +133,11 @@ export function parseListings(body: unknown): FetchWalletsResult {
   return { wallets, total };
 }
 
+/**
+ * Loads one page of wallet listings from WalletConnect Explorer.
+ *
+ * @throws When Explorer returns a non-successful HTTP response.
+ */
 export async function fetchWallets(opts: FetchWalletsOptions): Promise<FetchWalletsResult> {
   const params = new URLSearchParams();
   params.set("projectId", opts.projectId);

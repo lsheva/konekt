@@ -1,74 +1,127 @@
 import { type Metadata, ProviderRpcError, type RequestArguments, RpcErrorCode, type Session } from "./types.ts";
 
+/** Request passed to chain adapters. */
 export type RpcRequest = {
+  /** JSON-RPC method name. */
   method: string;
+  /** Method-specific parameters supplied by the caller. */
   params?: unknown | undefined;
-  /** The chain the caller targeted for this one call. Absent means "wherever this namespace is active". */
+  /** CAIP-2 chain explicitly targeted for this call, or absent to use the namespace's active chain. */
   chainId?: string | undefined;
 };
 
 /** An `RpcRequest` after an adapter has resolved which chain it goes to. */
 export type ForwardedRequest = RpcRequest & { chainId: string };
 
+/** Provider operations and state exposed to a chain adapter. */
 export type Ctx = {
+  /** Reads the current approved session. */
   session: () => Session | undefined;
+  /** Emits a public provider event. */
   emit: (event: string, payload: unknown) => void;
+  /** All chains configured on the provider. */
   chains: Chain[];
+  /** Reads the active CAIP-2 chain ID for a namespace. */
   activeChainId: (namespace: string) => string | undefined;
+  /** Replaces the active CAIP-2 chain ID for a namespace. */
   setActiveChainId: (namespace: string, id: string) => void;
+  /** Sends a fully targeted request through the WalletConnect session. */
   forward: (req: ForwardedRequest) => Promise<unknown>;
 };
 
+/**
+ * Behavior shared by every configured chain in a namespace.
+ *
+ * `handle` returns `undefined` when the adapter does not own a method. Any other value, including
+ * `null`, is the final result. `extend` may add namespace-specific properties to the provider.
+ */
 export type ChainAdapter<Ext = object> = {
+  /** CAIP-2 namespace, for example `"eip155"` or `"solana"`. */
   namespace: string;
+  /** Wallet methods proposed for this namespace. */
   methods: string[];
+  /** Wallet events proposed for this namespace. */
   events: string[];
+  /** Handles a supported request, or returns `undefined` so another adapter may handle it. */
   handle?: ((req: RpcRequest, ctx: Ctx) => Promise<unknown> | unknown) | undefined;
+  /** Adds namespace-specific getters or methods to the provider. */
   extend?: ((ctx: Ctx) => Ext) | undefined;
+  /** Updates adapter state after a session is approved or restored. */
   onSettle?: ((session: Session, ctx: Ctx) => void) | undefined;
+  /** Maps a session event to adapter state and public provider events. */
   onEvent?: ((name: string, data: unknown, chainId: string | undefined, ctx: Ctx) => void) | undefined;
+  /** Clears adapter-owned state after disconnection. */
   onDisconnect?: (() => void) | undefined;
 };
 
+/** One configured CAIP-2 chain and the adapter that handles its namespace. */
 export type Chain<Ext = object> = {
+  /** CAIP-2 namespace, such as `"eip155"`. */
   namespace: string;
+  /** Complete CAIP-2 ID, such as `"eip155:1"`. */
   id: string;
+  /** Shared behavior for this chain's namespace. */
   adapter: ChainAdapter<Ext>;
+  /** Optional transport for chain reads. The built-in EVM adapter uses it for JSON-RPC reads. */
   read?: ((req: RequestArguments) => Promise<unknown>) | undefined;
 };
 
+/** A single chain or one array of chains returned by an adapter helper such as `evm()`. */
 export type ChainInput = Chain | readonly Chain[];
 
+/** WalletConnect session proposal before it is published to the relay. */
 export type Proposal = {
+  /** Namespace capabilities the wallet must support. */
   requiredNamespaces: Record<string, { chains?: string[]; methods: string[]; events: string[] }>;
+  /** Namespace capabilities the wallet may approve. Konekt puts configured chains here. */
   optionalNamespaces: Record<string, { chains: string[]; methods: string[]; events: string[] }>;
+  /** Relay protocols supported by the proposing app. */
   relays: { protocol: string }[];
+  /** App identity and metadata presented to the wallet. */
   proposer: { publicKey: string; metadata: Metadata };
+  /** Unix timestamp in seconds when the proposal expires. */
   expiryTimestamp: number;
-  /** Feature-owned side requests. A feature writes its own key and reads the matching key back
-   * off `Session.proposalRequestsResponses`. */
+  /**
+   * Feature-owned side requests. A feature writes its own key and reads the matching key from
+   * `Session.proposalRequestsResponses`.
+   */
   requests?: Record<string, unknown> | undefined;
 };
 
+/** Optional hooks that add behavior to session setup without intercepting normal requests. */
 export type Feature = {
+  /** Stable feature name used for diagnostics. */
   name: string;
-  /** Runs before the proposal is published, so it may await work like fetching a server nonce. */
+  /**
+   * Runs before the proposal is published. It may await work such as fetching a server nonce and
+   * may return a replacement proposal.
+   */
   onProposal?: ((p: Proposal) => Proposal | undefined | Promise<Proposal | undefined>) | undefined;
-  /** Throwing rejects `connect()` and tears the session down. */
+  /** Runs after approval. Throwing rejects `connect()` and tears the new session down. */
   onSettle?: ((s: Session) => void | Promise<void>) | undefined;
+  /** Clears feature-owned state after the session ends. */
   onDisconnect?: (() => void) | undefined;
 };
 
 type Inner<T> = T extends readonly (infer U)[] ? U : T;
+/** Type-level helper that flattens one level of chain inputs. */
 export type FlattenChains<C extends readonly unknown[]> = Inner<C[number]>;
 
 type AdapterExt<C> = C extends Chain<infer E> ? E : object;
 
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
+/** Type-level intersection of the provider extensions supplied by configured chain adapters. */
 export type ChainExtensions<C extends readonly unknown[]> = UnionToIntersection<AdapterExt<FlattenChains<C>>>;
 
-/** An explicitly targeted chain wins, then the active one, then the first configured in the namespace. */
+/**
+ * Selects the chain for a namespace.
+ *
+ * An explicitly targeted chain wins, followed by the active chain and then the first configured
+ * chain in the namespace.
+ *
+ * @returns A CAIP-2 chain ID, or `undefined` when the provider has no chain in that namespace.
+ */
 export function resolveChainId(req: RpcRequest, ctx: Ctx, namespace: string): string | undefined {
   if (req.chainId?.startsWith(`${namespace}:`)) return req.chainId;
   return ctx.activeChainId(namespace) ?? ctx.chains.find((c) => c.namespace === namespace)?.id;

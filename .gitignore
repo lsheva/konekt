@@ -1,5 +1,8 @@
 node_modules
 dist
+.astro
+packages/docs/src/content/docs/api
+packages/docs/public/skills
 *.tsbuildinfo
 .hardhat
 cache

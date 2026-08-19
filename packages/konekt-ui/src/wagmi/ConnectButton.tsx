@@ -8,14 +8,30 @@ import { WalletModal } from "../WalletModal.tsx";
 import { AccountModal } from "./AccountModal.tsx";
 import { useWagmiPairing } from "./useWagmiPairing.ts";
 
+/** Props for {@link ConnectButton}. */
 export type ConnectButtonProps = WcAppearanceProps & {
+  /** WalletConnect Cloud project ID used to query Wallet Explorer. */
   projectId: string;
+  /** CAIP-2 chain IDs used to filter Explorer wallets. Defaults to configured wagmi chains. */
   chains?: readonly string[] | undefined;
+  /** Include, exclude, and featured lists of WalletConnect Explorer IDs. */
   wallets?: WalletFilter | undefined;
+  /**
+   * Lazily registers and returns the Konekt wagmi connector when the config does not already
+   * contain one.
+   */
   getWalletConnect?: (() => Promise<Connector>) | undefined;
+  /** Cancels pending connection work owned by the connector when the user dismisses pairing. */
   onDismiss?: (() => void) | undefined;
 };
 
+/**
+ * Complete wagmi wallet control with connection, account, network, and disconnect dialogs.
+ *
+ * A wagmi connector whose `id` or `type` is `"konekt"` supplies WalletConnect pairing. Other
+ * configured connectors appear as installed wallet options. Pass `getWalletConnect` to register
+ * the Konekt connector only when the user starts pairing.
+ */
 export function ConnectButton({
   projectId,
   chains,

@@ -5,8 +5,12 @@ import type { LocalWallet, Pairing } from "../WalletModal.tsx";
 
 const KONEKT = "konekt";
 
+/** Options for {@link useWagmiPairing}. */
 export type WagmiPairingOptions = {
-  /** Registers the WalletConnect connector on demand when the config was built without one. */
+  /**
+   * Registers and returns the Konekt connector on demand when the wagmi config does not already
+   * contain one.
+   */
   getWalletConnect?: (() => Promise<Connector>) | undefined;
 };
 
@@ -18,7 +22,13 @@ function toLocalWallet(connector: Connector): LocalWallet {
   return { id: connector.uid, name: connector.name, icon: connector.icon, rdns: connector.id };
 }
 
-/** Pairing through wagmi: injected connectors are local wallets, the konekt connector carries the QR. */
+/**
+ * Creates a {@link Pairing} from the nearest wagmi provider.
+ *
+ * Connectors other than Konekt become local wallet choices. A connector whose `id` or `type` is
+ * `"konekt"` starts WalletConnect pairing and supplies `display_uri` through its message emitter.
+ * If no such connector is registered, pass `getWalletConnect` to create it lazily.
+ */
 export function useWagmiPairing({ getWalletConnect }: WagmiPairingOptions = {}): Pairing {
   const connectors = useConnectors();
   const { mutate, reset: resetConnect, error: connectError } = useConnect();

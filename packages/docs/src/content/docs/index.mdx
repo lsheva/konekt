@@ -1,0 +1,52 @@
+---
+title: konekt
+description: Connect a browser app to WalletConnect wallets with a small, modular provider.
+template: splash
+hero:
+  tagline: Connect your browser app to wallets with a small WalletConnect client. Add only the chains and features you need.
+  actions:
+    - text: Get started
+      link: /guides/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: Add a wallet modal
+      link: /guides/konekt-ui/
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkButton } from "@astrojs/starlight/components";
+
+Konekt gives your app an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)-compatible provider backed by WalletConnect v2. It has no `@walletconnect` runtime dependency, and chain support is split into optional imports so unused code can stay out of your bundle.
+
+<CardGrid stagger>
+  <Card title="Start with one provider" icon="rocket">
+    Call `Provider.init()` once, show the pairing QR, and wait for the user to approve the connection in their wallet.
+  </Card>
+  <Card title="Choose your networks" icon="puzzle">
+    Add EVM, Solana, Bitcoin, or Cosmos networks. Konekt proposes only the networks and wallet methods you configure.
+  </Card>
+  <Card title="Bring your own UI—or use ours" icon="setting">
+    Listen for a pairing URI and render it yourself, or install `konekt-ui` for a React wallet picker and QR modal.
+  </Card>
+  <Card title="Add sign-in when you need it" icon="document">
+    The optional SIWE feature requests authentication during pairing. Verify the signed result on your server.
+  </Card>
+</CardGrid>
+
+## Where to begin
+
+- New to konekt? Follow [Getting started](/guides/getting-started/) for a complete first connection.
+- Need more than Ethereum? Read [Chains and networks](/guides/chains/).
+- Building a connect button or wallet picker? Choose between [wallet events](/guides/wallet-ui/) and [konekt-ui](/guides/konekt-ui/).
+- Using an EVM client library? Follow the [viem](/guides/viem/) or [wagmi](/guides/wagmi/) integration guide.
+- Keeping the initial page small? See the measured [bundle sizes, tree-shaking, and lazy-loading patterns](/guides/bundle-size/).
+- Adding Sign-In with Ethereum? Read [Authentication features](/guides/features/).
+- Looking up a type or function? Open the [API reference](/api/readme/).
+
+## For AI agents
+
+Start with the [integration instructions](/ai/), then use [`/llms.txt`](/llms.txt) for an index or [`/llms-full.txt`](/llms-full.txt) for the complete guides.
+
+<LinkButton href="/llms.txt" variant="minimal">llms.txt</LinkButton>
+<LinkButton href="/llms-full.txt" variant="minimal">llms-full.txt</LinkButton>

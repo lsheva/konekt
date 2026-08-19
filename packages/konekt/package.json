@@ -16,7 +16,8 @@
     "./http": "./src/http.ts"
   },
   "files": [
-    "src"
+    "src",
+    "SKILL.md"
   ],
   "scripts": {
     "test": "node --env-file=../../.env --test test/*.test.ts",

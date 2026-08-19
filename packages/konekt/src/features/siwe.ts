@@ -9,23 +9,35 @@ import { type Cacao, parseCaipAccount, type Session } from "../kernel/types.ts";
 
 const DID_PKH = "did:pkh:";
 
+/** Configuration for {@link siwe} proposal authentication. */
 export type SiweOptions = {
-  /** The site asking, as it must appear to the wallet. Usually `location.host`. */
+  /** Site asking the user to sign in, exactly as the wallet should display it. Usually `location.host`. */
   domain: string;
+  /** Application audience URI. Usually `location.origin`. */
   uri: string;
-  /** CAIP-2 ids to authenticate. The wallet returns one CACAO per account it signs for. */
+  /** CAIP-2 chain IDs to authenticate. The wallet returns one CACAO per account it signs for. */
   chains: string[];
-  /** Awaited per connect, so a server-issued nonce can be fetched at the moment of pairing. */
+  /**
+   * Returns a fresh, single-use challenge. This is awaited for every connection attempt so the
+   * nonce can be issued by the server immediately before pairing.
+   */
   getNonce: () => string | Promise<string>;
+  /** Optional human-readable reason for signing in. Keep it to one line. */
   statement?: string | undefined;
+  /** Optional ISO timestamp after which the authentication message is expired. */
   exp?: string | undefined;
+  /** Optional ISO timestamp before which the authentication message is not valid. */
   nbf?: string | undefined;
+  /** Optional application-specific identifier included in the signed message. */
   requestId?: string | undefined;
+  /** Optional resource URIs included in the signed message. `urn:recap:` resources are unsupported. */
   resources?: string[] | undefined;
   /**
-   * Defaults to true: a wallet that ignores the request fails the connect, because reporting a
-   * connection as signed-in when nothing was signed is worse than not connecting. Set false while
-   * wallet support is thin, and treat `cacaosOf(session).length` as the signed-in test.
+   * Whether a wallet must answer the authentication request. Defaults to `true`.
+   *
+   * When `true`, a wallet that ignores authentication causes `connect()` to reject. Set this to
+   * `false` to allow a connected but signed-out session, then use `cacaosOf(session).length` to
+   * distinguish that state.
    */
   required?: boolean | undefined;
 };
@@ -46,7 +58,12 @@ type AuthenticationRequest = {
   resources?: string[] | undefined;
 };
 
-/** The CACAOs the wallet returned for the authentication request, if it answered at all. */
+/**
+ * Reads the CACAOs returned for this session's authentication request.
+ *
+ * @returns The response array, or an empty array when the session is absent or the wallet did not
+ * answer authentication.
+ */
 export function cacaosOf(session: Session | undefined): Cacao[] {
   const authentication = session?.proposalRequestsResponses?.authentication;
   return Array.isArray(authentication) ? authentication : [];
@@ -64,6 +81,30 @@ function approvedAccounts(session: Session): Set<string> {
   return out;
 }
 
+/**
+ * Adds a CAIP-122 authentication request to the WalletConnect session proposal.
+ *
+ * The feature fetches a nonce in `onProposal`. After approval it checks that returned CACAOs match
+ * that nonce, the requested domain and URI, and an account granted by the session. It does not
+ * verify signatures.
+ *
+ * Send the returned CACAOs to the server that makes the authentication decision. That server must
+ * call both `verifyCacao()` and `checkClaims()` from `konekt/cacao`.
+ *
+ * @example
+ * ```ts
+ * features: [
+ *   siwe({
+ *     domain: location.host,
+ *     uri: location.origin,
+ *     chains: ["eip155:1"],
+ *     getNonce: () => fetch("/auth/nonce").then((response) => response.text()),
+ *   }),
+ * ]
+ * ```
+ *
+ * @throws When `resources` contains an unsupported `urn:recap:` entry.
+ */
 export function siwe(options: SiweOptions): Feature {
   if (options.resources?.some((r) => r.startsWith("urn:recap:"))) {
     throw new Error("siwe does not support recap resources: the statement rewrite they require is not implemented.");

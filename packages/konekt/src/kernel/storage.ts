@@ -1,9 +1,17 @@
 import { randomBytes } from "@noble/hashes/utils";
 import { fromHex, toHex } from "./bytes.ts";
 
+/**
+ * Asynchronous key-value storage used for the relay identity and session.
+ *
+ * The shape is compatible with wrappers around browser storage, mobile storage, and test stores.
+ */
 export type Storage = {
+  /** Reads a value, returning `null` when the key does not exist. */
   getItem(key: string): Promise<string | null>;
+  /** Creates or replaces a value. */
   setItem(key: string, value: string): Promise<void>;
+  /** Removes a value. */
   removeItem(key: string): Promise<void>;
 };
 
@@ -13,6 +21,11 @@ export const STORE = {
   session: "konekt:session",
 } as const;
 
+/**
+ * Creates non-persistent storage backed by a new in-memory map.
+ *
+ * Each call returns an isolated store. Data disappears when the object is discarded.
+ */
 export function memoryStorage(): Storage {
   const m = new Map<string, string>();
   return {

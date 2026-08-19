@@ -7,7 +7,17 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/artifacts", "!**/cache", "!packages/example", "!packages/showcase"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/artifacts",
+      "!**/cache",
+      "!**/.astro",
+      "!packages/example",
+      "!packages/showcase",
+      "!packages/docs/src/content/docs/api"
+    ]
   },
   "formatter": {
     "enabled": true,

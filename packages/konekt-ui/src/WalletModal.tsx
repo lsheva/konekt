@@ -18,34 +18,57 @@ type View = "home" | "all" | "qr";
 
 /** A wallet the browser already has: an injected extension, or any connector the app registered. */
 export type LocalWallet = {
+  /** Stable connector-specific identifier. */
   id: string;
+  /** Human-readable wallet name. */
   name: string;
+  /** Optional wallet icon URL. */
   icon?: string | undefined;
   /** EIP-6963 rdns when the wallet announced one. Used to dedupe against explorer listings. */
   rdns?: string | undefined;
 };
 
-/** Where the modal gets its wallets and its pairing URI. `useProviderPairing` and `useWagmiPairing` build one. */
+/**
+ * Connection state and actions consumed by {@link WalletModal}.
+ *
+ * Use `useProviderPairing()` for a Konekt provider or `useWagmiPairing()` for wagmi instead of
+ * building this object by hand.
+ */
 export type Pairing = {
+  /** Whether a wallet is currently connected. */
   connected: boolean;
+  /** Wallets already available through registered browser connectors. */
   local: readonly LocalWallet[];
+  /** Connects one of the local wallets. */
   connectLocal: (wallet: LocalWallet) => void;
-  /** Starts a WalletConnect pairing. The returned teardown cancels it. */
+  /** Starts WalletConnect pairing and reports its URI. The returned teardown cancels or detaches it. */
   start: (onUri: (uri: string) => void) => () => void;
+  /** Clears connection errors before a new modal flow. */
   reset: () => void;
+  /** Human-readable pairing error to display in the modal. */
   error?: string | undefined;
-  /** CAIP-2 ids the binding knows about. The `chains` prop overrides them. */
+  /** CAIP-2 chain IDs known by the binding. The modal's `chains` prop overrides them. */
   chains?: readonly string[] | undefined;
 };
 
+/** Props for {@link WalletModal}. */
 export type WalletModalProps = WcAppearanceProps & {
+  /** Whether the dialog is rendered. */
   open: boolean;
+  /** WalletConnect Cloud project ID used to query the Wallet Explorer. */
   projectId: string;
+  /** Connection binding created by `useProviderPairing()` or `useWagmiPairing()`. */
   pairing: Pairing;
-  /** CAIP-2 ids. Only wallets that support one of them are listed. */
+  /** CAIP-2 chain IDs. Explorer results must support at least one. Defaults to `pairing.chains`. */
   chains?: readonly string[] | undefined;
+  /** Include, exclude, and featured lists of WalletConnect Explorer IDs. */
   wallets?: WalletFilter | undefined;
+  /**
+   * Runs when the user leaves an unfinished pairing flow. Use it to cancel work owned outside the
+   * `Pairing`, such as a wagmi connector's pending connection.
+   */
   onDismiss?: (() => void) | undefined;
+  /** Requests that the controlling component set `open` to `false`. */
   onClose: () => void;
 };
 
@@ -106,6 +129,16 @@ function WalletCard({ name, imageUrl, onClick, unstyled }: WalletEntryProps) {
   );
 }
 
+/**
+ * Wallet picker and WalletConnect pairing dialog.
+ *
+ * The modal loads compatible wallets from WalletConnect Explorer, includes any local wallets from
+ * the pairing binding, and starts pairing only when the user enters the QR view. Closing that view
+ * runs the teardown returned by `pairing.start`.
+ *
+ * The dialog traps keyboard focus, closes on Escape, restores previous focus, and labels its
+ * controls for assistive technology.
+ */
 export function WalletModal({
   open,
   projectId,

@@ -1,0 +1,1 @@
+../../../packages/konekt/SKILL.md

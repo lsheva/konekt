@@ -3,8 +3,11 @@ import { uiClass, type WcAppearanceProps } from "./appearance.ts";
 
 type Matrix = readonly (readonly boolean[])[];
 
+/** Props for the WalletConnect QR renderer. */
 export type QrCodeProps = Pick<WcAppearanceProps, "className" | "style" | "unstyled"> & {
+  /** Exact text encoded in the QR code, usually a `wc:` pairing URI. */
   value: string;
+  /** Rendered width and height in CSS pixels. Defaults to 232. */
   size?: number | undefined;
 };
 
@@ -23,6 +26,12 @@ function toPath(matrix: Matrix): string {
   return d;
 }
 
+/**
+ * Renders a string as an accessible SVG QR code.
+ *
+ * Encoding loads asynchronously, so the component first renders a square placeholder with the
+ * requested size. The finished image is labelled "Pairing QR code".
+ */
 export function QrCode({ value, size = 232, className, style, unstyled }: QrCodeProps) {
   const [matrix, setMatrix] = useState<Matrix>();
 

@@ -14,9 +14,21 @@ const NAMESPACE_NAMES: Record<string, string> = { eip155: "Ethereum", solana: "S
 /** `isValidSignature(bytes32,bytes)`, doubling as the success value the contract echoes back. */
 const EIP1271_MAGIC = "1626ba7e";
 
-export type DidPkh = { namespace: string; reference: string; address: string };
+/** Parsed `did:pkh` issuer identifying a chain account. */
+export type DidPkh = {
+  /** CAIP-2 namespace, for example `"eip155"`. */
+  namespace: string;
+  /** Chain reference, for example `"1"`. */
+  reference: string;
+  /** Namespace-specific account address. */
+  address: string;
+};
 
-/** `did:pkh:eip155:1:0xabc…` into its parts. */
+/**
+ * Parses a `did:pkh` issuer such as `did:pkh:eip155:1:0xabc…`.
+ *
+ * @returns The namespace, chain reference, and address, or `undefined` for a malformed issuer.
+ */
 export function parseDidPkh(iss: string): DidPkh | undefined {
   const [did, method, namespace, reference, address] = iss.split(":");
   if (did !== "did" || method !== "pkh") return;
@@ -34,8 +46,15 @@ const RECAP_UNSUPPORTED =
   "Recap resources rewrite the statement before signing, and reconstructing that rewrite is not implemented.";
 
 /**
- * The CAIP-122 message the wallet actually signed. Byte-identical to `formatMessage` in
- * `@walletconnect/utils`, which is the only reason a recovered address can match.
+ * Reconstructs the human-readable CAIP-122 message covered by a CACAO signature.
+ *
+ * The output is byte-compatible with the WalletConnect CAIP-122 formatter so EIP-191 address
+ * recovery and EIP-1271 contract verification use exactly the message shown to the wallet.
+ *
+ * @param payload Claims returned by the wallet.
+ * @param iss Issuer to format. Defaults to `payload.iss`.
+ * @throws When the issuer or audience is missing, the statement contains a line break, or the
+ * payload includes unsupported recap resources.
  */
 export function formatCacaoMessage(payload: CacaoPayload, iss: string = payload.iss): string {
   const did = parseDidPkh(iss);
@@ -78,11 +97,27 @@ export type CacaoVerification =
   | { status: "invalid"; reason: string }
   | { status: "unverifiable"; reason: string };
 
+/** Options for cryptographic CACAO verification. */
 export type VerifyCacaoOptions = {
-  /** JSON-RPC on the issuer's chain, needed only for eip1271. `http(url)` from `konekt/http` fits. */
+  /**
+   * JSON-RPC call function for the issuer's chain. EIP-1271 smart contract signatures require it;
+   * `http(url)` from `konekt/http` has the expected shape. EIP-191 signatures do not use it.
+   */
   call?: ((req: RequestArguments) => Promise<unknown>) | undefined;
 };
 
+/**
+ * Verifies the cryptographic signature on a CACAO.
+ *
+ * Call this on the server that makes the authentication decision, not in the browser. This
+ * function supports EIP-191 account signatures and EIP-1271 smart contract signatures.
+ *
+ * Signature verification does not check whether the domain, URI, nonce, or time limits match the
+ * current login attempt. Call {@link checkClaims} as a separate required step.
+ *
+ * @returns `valid` when the signature passes, `invalid` when it fails, or `unverifiable` when this
+ * process cannot complete the check.
+ */
 export async function verifyCacao(cacao: Cacao, opts: VerifyCacaoOptions = {}): Promise<CacaoVerification> {
   const did = parseDidPkh(cacao.p.iss);
   if (!did) return { status: "invalid", reason: `Malformed issuer "${cacao.p.iss}".` };
@@ -169,17 +204,26 @@ async function verifyEip1271(
   return { status: "invalid", reason: "The account contract rejected the signature." };
 }
 
+/** Server-side values expected in a CACAO for the current authentication attempt. */
 export type ExpectedClaims = {
+  /** Exact application host that issued the challenge. */
   domain: string;
+  /** Fresh, single-use nonce previously issued by the server. */
   nonce: string;
-  /** Matched against `aud`, falling back to `uri`, when given. */
+  /** Expected audience, matched against `aud` and then the legacy `uri` field. */
   uri?: string | undefined;
+  /** Time used for expiration checks. Defaults to the current time; inject in deterministic tests. */
   now?: Date | undefined;
 };
 
 /**
- * The half of verification that is not cryptography. A valid signature over someone else's
- * challenge is still a replay, so a caller that checks only `verifyCacao` is not done.
+ * Checks that CACAO claims belong to the current authentication attempt.
+ *
+ * This compares the domain and nonce, optionally compares the audience URI, and enforces `exp` and
+ * `nbf` time limits. The server must issue and consume the nonce so it cannot be replayed.
+ *
+ * This function does not verify the signature. Authentication requires both this function and
+ * {@link verifyCacao} to return `valid`.
  */
 export function checkClaims(payload: CacaoPayload, expected: ExpectedClaims): CacaoVerification {
   const invalid = (reason: string): CacaoVerification => ({ status: "invalid", reason });

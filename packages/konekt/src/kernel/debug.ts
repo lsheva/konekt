@@ -1,3 +1,8 @@
+/**
+ * Structured provider diagnostic.
+ *
+ * Events report relay lifecycle and protocol progress without exposing encrypted payload contents.
+ */
 export type DebugEvent =
   | { type: "socket_open" }
   | { type: "socket_close"; code: number; reason: string }
@@ -6,6 +11,7 @@ export type DebugEvent =
   | { type: "settle" }
   | { type: "error"; error: string };
 
+/** Callback passed as `CreateProviderOptions.onDebug` to receive structured diagnostics. */
 export type OnDebug = (e: DebugEvent) => void;
 
 const enabled = () => typeof process !== "undefined" && process.env.WC_DEBUG === "1";
