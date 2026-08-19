@@ -8,10 +8,10 @@ You are integrating **konekt**, a small browser client for WalletConnect v2. Use
 ## Read in this order
 
 1. This page.
-2. [`/skills/konekt/SKILL.md`](/skills/konekt/SKILL.md) for provider, chain, request, and authentication code.
-3. [`/skills/konekt-ui/SKILL.md`](/skills/konekt-ui/SKILL.md) for React wallet UI.
-4. [`/llms-full.txt`](/llms-full.txt) when you need all human-facing guides in one document.
-5. Generated `/api/` pages only when you need the exact type of a specific export.
+2. [`skills/konekt/SKILL.md`](../skills/konekt/SKILL.md) for provider, chain, request, and authentication code.
+3. [`skills/konekt-ui/SKILL.md`](../skills/konekt-ui/SKILL.md) for React wallet UI.
+4. [`llms-full.txt`](../llms-full.txt) when you need all human-facing guides in one document.
+5. Generated [API pages](../api/readme/) only when you need the exact type of a specific export.
 
 ## Minimal browser integration
 
@@ -59,7 +59,7 @@ await provider.connect();
 - viem: pass the connected EVM provider to `custom(provider)`. Wallet clients use Konekt; public clients either use the same custom transport with an EVM `read` transport or viem’s own `http()`.
 - wagmi 3: use an application-owned connector around the Konekt provider. Register it in `createConfig()` and let its `getProvider` initialize Konekt lazily. Wagmi HTTP transports handle reads.
 - Do not use wagmi private `_internal` APIs for connector registration.
-- Read `/guides/viem/` or `/guides/wagmi/` before generating integration code.
+- Read the [viem](../guides/viem/) or [wagmi](../guides/wagmi/) guide before generating integration code.
 
 ## Bundle discipline
 
@@ -68,7 +68,7 @@ await provider.connect();
 - Import `konekt/cacao` only in trusted server code.
 - To lazy-load Konekt, dynamically import the provider, chains, and features together before the first `Provider.init()` call. Later calls cannot add options to the singleton.
 - A wagmi connector may remain statically registered while its `getProvider()` dynamically imports Konekt.
-- Read `/guides/bundle-size/` for measured sizes and complete lazy-loading examples.
+- Read [Bundle size and loading](../guides/bundle-size/) for measured sizes and complete lazy-loading examples.
 
 ## Wallet UI
 

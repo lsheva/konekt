@@ -97,7 +97,7 @@ export function WalletControls({ projectId }: { projectId: string }) {
 }
 ```
 
-The wagmi entry point does not create a Konekt connector for you. Register the application-owned connector in `createConfig()`; it can still delay `Provider.init()` until first use, so static registration does not need to open a relay socket. The complete setup is in the [wagmi integration guide](/guides/wagmi/).
+The wagmi entry point does not create a Konekt connector for you. Register the application-owned connector in `createConfig()`; it can still delay `Provider.init()` until first use, so static registration does not need to open a relay socket. The complete setup is in the [wagmi integration guide](../wagmi/).
 
 `getWalletConnect` remains available for applications that already have a supported runtime connector-registration mechanism. Avoid private wagmi APIs. Pass `onDismiss` when connector-owned work needs separate cancellation, and use `useWagmiPairing()` when you want a custom trigger with `WalletModal`.
 

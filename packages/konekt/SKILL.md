@@ -78,7 +78,8 @@ uses the active EVM chain; a fixed read transport can call
   before the first `Provider.init()` call. Later calls cannot add options to the singleton.
 - Lazy initialization delays saved-session restoration. Initialize eagerly when the first render
   needs connected account state.
-- The measured bundle table and React lazy-loading patterns are in `/guides/bundle-size/`.
+- The measured bundle table and React lazy-loading patterns are at
+  `https://lsheva.github.io/konekt/guides/bundle-size/`.
 
 ## Features
 

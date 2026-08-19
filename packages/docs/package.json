@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "sync:skills": "node scripts/sync-skills.mjs",
-    "dev": "pnpm sync:skills && astro dev",
-    "build": "pnpm sync:skills && astro build",
+    "check:links": "node scripts/check-links.mjs",
+    "dev": "pnpm sync:skills && pnpm check:links && astro dev",
+    "build": "pnpm sync:skills && pnpm check:links && astro build",
     "preview": "astro preview",
-    "typecheck": "pnpm sync:skills && astro check"
+    "typecheck": "pnpm sync:skills && pnpm check:links && astro check"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.7",

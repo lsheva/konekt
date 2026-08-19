@@ -217,4 +217,4 @@ provider.on("disconnect", () => {
 });
 ```
 
-Framework integrations such as wagmi already maintain this reactive state. Use the [wagmi integration](/guides/wagmi/) when building a React application around wagmi hooks.
+Framework integrations such as wagmi already maintain this reactive state. Use the [wagmi integration](../wagmi/) when building a React application around wagmi hooks.

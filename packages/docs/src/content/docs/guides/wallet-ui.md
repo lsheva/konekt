@@ -10,7 +10,7 @@ Use:
 - `display_uri` while creating a new session;
 - `request_sent` when an approved session receives a signing or transaction request.
 
-If you prefer a ready-made React interface, use [konekt-ui](/guides/konekt-ui/).
+If you prefer a ready-made React interface, use [konekt-ui](../konekt-ui/).
 
 ## Show a pairing QR
 

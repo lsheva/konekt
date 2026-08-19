@@ -154,7 +154,7 @@ export function WalletArea(props: { projectId: string; provider: Provider }) {
 
 Bundlers such as Vite can place the component JavaScript and CSS in lazy chunks. Keep a visible loading state: downloading code after a click without feedback makes the interface appear broken.
 
-For wagmi, statically registering the small application connector is still the recommended path. The connector can dynamically import Konekt inside `getProvider()`, so registration itself does not load the provider or open a relay socket. See the [wagmi guide](/guides/wagmi/).
+For wagmi, statically registering the small application connector is still the recommended path. The connector can dynamically import Konekt inside `getProvider()`, so registration itself does not load the provider or open a relay socket. See the [wagmi guide](../wagmi/).
 
 ## What to optimize first
 

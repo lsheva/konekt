@@ -230,7 +230,7 @@ Static registration in `createConfig()` is the recommended path. The connector a
 
 `ConnectButton` and `useWagmiPairing` also accept `getWalletConnect` for applications with their own supported runtime connector-registration mechanism. Avoid depending on wagmi’s private `_internal` APIs in production integration code.
 
-To keep the provider and modal out of the initial page chunk, follow the [lazy-loading patterns and measured bundle sizes](/guides/bundle-size/).
+To keep the provider and modal out of the initial page chunk, follow the [lazy-loading patterns and measured bundle sizes](../bundle-size/).
 
 ## Troubleshooting
 

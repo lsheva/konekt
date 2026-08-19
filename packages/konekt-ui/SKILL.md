@@ -63,7 +63,7 @@ import "konekt-ui/styles.css";
 - Render an accessible loading state while the chunk downloads.
 - A statically registered wagmi connector may still import and initialize Konekt lazily in
   `getProvider()`.
-- Read `/guides/bundle-size/` for measured sizes and complete examples.
+- Read `https://lsheva.github.io/konekt/guides/bundle-size/` for measured sizes and complete examples.
 
 ## Filters
 

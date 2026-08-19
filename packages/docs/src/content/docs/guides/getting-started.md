@@ -29,7 +29,7 @@ pnpm add konekt
 
 You can use `npm install konekt` or `yarn add konekt` instead.
 
-The provider and EVM adapter are 27.49 kB minified and gzipped with their runtime dependencies. Optional transports, features, chain adapters, and UI use separate entry points. See [Bundle size and loading](/guides/bundle-size/) for the complete measurements and an on-demand initialization pattern.
+The provider and EVM adapter are 27.49 kB minified and gzipped with their runtime dependencies. Optional transports, features, chain adapters, and UI use separate entry points. See [Bundle size and loading](../bundle-size/) for the complete measurements and an on-demand initialization pattern.
 
 ## 1. Create the provider
 
@@ -75,7 +75,7 @@ try {
 }
 ```
 
-`connect()` waits until the user approves or rejects the proposal. The `display_uri` event arrives while it is waiting. Render the URI as a QR code, or use [konekt-ui](/guides/konekt-ui/) to get a complete React modal.
+`connect()` waits until the user approves or rejects the proposal. The `display_uri` event arrives while it is waiting. Render the URI as a QR code, or use [konekt-ui](../konekt-ui/) to get a complete React modal.
 
 Pass an `AbortSignal` when your UI has a Cancel or Close button:
 
@@ -117,12 +117,12 @@ const signature = await provider.request({
 });
 ```
 
-Signing and transaction methods go to the wallet. Read-only JSON-RPC methods such as `eth_getBalance` need an HTTP transport configured for that chain. See [Chains and networks](/guides/chains/) for the distinction.
+Signing and transaction methods go to the wallet. Read-only JSON-RPC methods such as `eth_getBalance` need an HTTP transport configured for that chain. See [Chains and networks](../chains/) for the distinction.
 
 ## Use an EVM client library
 
-- [viem](/guides/viem/) can wrap the provider with `custom()` for typed wallet actions and reads.
-- [wagmi](/guides/wagmi/) connects React state and hooks through a small application-owned connector.
+- [viem](../viem/) can wrap the provider with `custom()` for typed wallet actions and reads.
+- [wagmi](../wagmi/) connects React state and hooks through a small application-owned connector.
 
 ## Disconnect
 
