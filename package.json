@@ -13,6 +13,7 @@
     "size:built": "node scripts/size-report.mjs",
     "size:update": "pnpm build && node scripts/size-report.mjs --update",
     "check:node": "node scripts/smoke-packages.mjs",
+    "check:snippets": "pnpm --filter docs check:snippets",
     "check:packages": "pnpm build && pnpm check:packages:built",
     "check:packages:built": "publint packages/konekt && publint packages/konekt-ui && attw --pack packages/konekt --profile esm-only && attw --pack packages/konekt-ui --profile esm-only --exclude-entrypoints ./styles.css",
     "check:code": "pnpm lint && pnpm test && pnpm build && pnpm -r typecheck && pnpm check:node && pnpm check:packages:built && pnpm --filter example build && pnpm --filter showcase build",

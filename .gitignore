@@ -3,6 +3,7 @@ dist
 .astro
 packages/docs/src/content/docs/api
 packages/docs/public/skills
+packages/docs/.snippets
 *.tsbuildinfo
 .hardhat
 cache
