@@ -94,14 +94,37 @@ export function WalletConnection({ provider, projectId }: WalletConnectionProps)
 
 Use the same WalletConnect project ID for the provider and modal. The modal sends it to the WalletConnect Explorer when loading wallet listings.
 
-When the user opens the QR view, the modal:
+### What the modal does on its own
+
+Pairing does not begin when the modal opens. It begins when the user picks a wallet or the WalletConnect option and reaches the QR view. From there the modal:
 
 1. calls `provider.connect({ signal })`;
 2. renders the URI from `display_uri`;
-3. aborts the pending connection if the user closes the modal;
-4. closes after the provider connects.
+3. on a mobile browser, opens the selected wallet’s deep link as soon as the URI arrives;
+4. aborts the pending connection and calls `onDismiss` if the user leaves before it finishes;
+5. closes itself once the provider connects, by calling `onClose`.
+
+Because it closes itself, keep `open` as controlled state and let `onClose` set it to `false`. The modal also skips pairing entirely when `pairing.connected` is already true.
 
 The provider adapter does not supply installed browser extensions. It lists WalletConnect Explorer wallets and the generic QR option. Use the wagmi adapter when you also want registered browser connectors to appear as installed wallets.
+
+### `WalletModal` props
+
+| Prop | Type | Purpose |
+| --- | --- | --- |
+| `open` | `boolean` | Whether the dialog renders. Required. |
+| `projectId` | `string` | Explorer queries. Required, and the same ID as the provider. |
+| `pairing` | `Pairing` | From `useProviderPairing()` or `useWagmiPairing()`. Required. |
+| `onClose` | `() => void` | Asks the parent to set `open` to `false`. Required. |
+| `chains` | `readonly string[]` | CAIP-2 IDs used to filter Explorer results. Defaults to the provider’s chains. |
+| `wallets` | `WalletFilter` | `include`, `exclude`, and `featured` Explorer IDs. |
+| `onDismiss` | `() => void` | Runs when the user abandons an unfinished pairing. |
+| `theme` | `"light" \| "dark" \| "system"` | Color scheme. Defaults to `"system"`. |
+| `className` | `string` | Extra class on the root. |
+| `style` | `WcStyle` | Inline styles plus `--kui-*` token overrides. |
+| `unstyled` | `boolean` | Drops the default `kui-*` classes, keeping `data-kui` attributes. |
+
+`className`, `style`, `theme`, and `unstyled` are shared by every konekt-ui component.
 
 ## wagmi
 
@@ -128,24 +151,52 @@ export function WalletControls({ projectId }: { projectId: string }) {
 
 The wagmi entry point does not create a Konekt connector for you. Register the application-owned connector in `createConfig()`; it can still delay `Provider.init()` until first use, so static registration does not need to open a relay socket. The complete setup is in the [wagmi integration guide](../wagmi/).
 
-`getWalletConnect` remains available for applications that already have a supported runtime connector-registration mechanism. Avoid private wagmi APIs. Pass `onDismiss` when connector-owned work needs separate cancellation, and use `useWagmiPairing()` when you want a custom trigger with `WalletModal`.
+### `ConnectButton` props
+
+| Prop | Type | Purpose |
+| --- | --- | --- |
+| `projectId` | `string` | Explorer queries. Required. |
+| `chains` | `readonly string[]` | CAIP-2 IDs for wallet filtering. Defaults to the configured wagmi chains. |
+| `wallets` | `WalletFilter` | `include`, `exclude`, and `featured` Explorer IDs. |
+| `getWalletConnect` | `() => Promise<Connector>` | Supplies the Konekt connector when the wagmi config does not already contain one. |
+| `onDismiss` | `() => void` | Cancels connector-owned pairing work when the user closes the modal. |
+
+It also accepts the shared `theme`, `className`, `style`, and `unstyled` props.
+
+Three of these cover the less common cases:
+
+- `getWalletConnect` is a `ConnectButton` prop (and a `useWagmiPairing()` option) that returns the WalletConnect connector on demand, for apps that keep it out of `createConfig()` so a visitor who never connects never loads Konekt. See the [wagmi guide](../wagmi/#static-and-lazy-connector-registration) for the trade-off it carries.
+- `onDismiss` runs when the user closes the modal, so connector-owned work can be cancelled alongside the pairing.
+- `useWagmiPairing()` gives you the same pairing state without `ConnectButton`, for a custom trigger rendered with `WalletModal`.
 
 ## Which wallets, which networks
 
 By default, `WalletModal` asks the Explorer for wallets that support one of the provider’s configured chains. Override that list with CAIP-2 IDs:
 
 ```tsx
-<WalletModal
-  chains={["eip155:1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"]}
-  wallets={{
-    featured: [metaMaskExplorerId, phantomExplorerId],
-    exclude: [walletToHideExplorerId],
-  }}
-  projectId={projectId}
-  pairing={pairing}
-  onClose={() => setOpen(false)}
-  open={open}
-/>
+import { useState } from "react";
+import type { Provider } from "konekt";
+import { useProviderPairing, WalletModal } from "konekt-ui";
+
+// Copy the IDs from https://walletconnect.com/explorer
+const featuredWalletIds = ["…", "…"];
+const hiddenWalletIds = ["…"];
+
+export function WalletPicker({ provider, projectId }: { provider: Provider; projectId: string }) {
+  const [open, setOpen] = useState(false);
+  const pairing = useProviderPairing(provider);
+
+  return (
+    <WalletModal
+      open={open}
+      projectId={projectId}
+      pairing={pairing}
+      onClose={() => setOpen(false)}
+      chains={["eip155:1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"]}
+      wallets={{ featured: featuredWalletIds, exclude: hiddenWalletIds }}
+    />
+  );
+}
 ```
 
 Wallet filter values are WalletConnect Explorer IDs, not connector IDs or reverse-domain names.
@@ -164,7 +215,7 @@ The default `theme="system"` follows the user’s operating-system color scheme.
 
 Override design tokens through `style`:
 
-```tsx
+```tsx ignore
 <WalletModal
   open={open}
   projectId={projectId}
@@ -193,3 +244,21 @@ The shared modal component:
 - exposes the dialog title and control labels to assistive technology.
 
 If you compose the lower-level `Modal` or `QrCode` exports yourself, provide concise visible instructions alongside them. A QR code alone is not enough for someone who cannot scan it; offer a wallet link or copy action when possible.
+
+## Building your own picker
+
+`WalletModal` is one arrangement of smaller exports. Use them directly when you need a different one.
+
+| Export | From | Purpose |
+| --- | --- | --- |
+| `Modal` | `konekt-ui` | The accessible dialog shell: focus trap, Escape, backdrop, restored focus. |
+| `QrCode` | `konekt-ui` | Renders a pairing URI as a QR code. |
+| `fetchWallets` | `konekt-ui` | Queries the WalletConnect Explorer. Returns one page of listings. |
+| `filterWallets` | `konekt-ui` | Applies `include`, `exclude`, and `featured` to listings. |
+| `FEATURED_WALLET_IDS` | `konekt-ui` | Default featured Explorer IDs. |
+| `walletHref` | `konekt-ui` | Builds a wallet deep link from a listing and a pairing URI. |
+| `openWalletLink` | `konekt-ui` | Navigates to a wallet link. |
+| `isMobile` | `konekt-ui` | Whether to prefer deep links over a QR code. |
+| `AccountModal` | `konekt-ui/wagmi` | The connected account and network dialog `ConnectButton` opens. |
+
+`AccountModal` is controlled through `open`, `view` (`"account"` or `"networks"`), `onView`, and `onClose`, so a custom button can reuse the account and network switching UI without `ConnectButton`.

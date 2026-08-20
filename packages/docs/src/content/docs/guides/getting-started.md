@@ -141,15 +141,20 @@ Konekt throws `ProviderRpcError` for provider and JSON-RPC failures:
 | Code | Meaning | What to do |
 | --- | --- | --- |
 | `4100` | There is no connected session. | Call and await `connect()` first. |
-| `4200` | The method is unsupported, or an EVM read has no transport. | Check the method and configure `read` for JSON-RPC calls. |
-| `-32602` | The request parameters are malformed. | Check the method’s expected `params`. |
+| `4200` | The method is unsupported, the wallet declined to approve it, or an EVM read has no transport. | Read the message: it names the method and, for a declined method, lists what the wallet did approve. |
+| `-32602` | The request parameters are malformed, or the targeted chain is not configured. | Check the method’s expected `params`, and add the chain to `chains` before targeting it. |
 
 User rejection and wallet errors can have other codes. Show the message to the user when it is useful, but do not assume every error is a Konekt error.
+
+[Troubleshooting](../troubleshooting/) lists the errors Konekt throws as plain `Error` values, such as an expired proposal or a rejected relay connection.
 
 ## Creating isolated providers in tests
 
 ```ts
-const provider = await Provider.create(opts, { session: fakeSession });
+const testProvider = await Provider.create(
+  { projectId: "test", metadata, chains: evm(1) },
+  { session: fakeSession },
+);
 ```
 
 `Provider.create()` returns a new instance every time. It is intended for tests that need to inject a relay, session, seed, or storage. When you inject `session`, Konekt does not open a real relay connection.

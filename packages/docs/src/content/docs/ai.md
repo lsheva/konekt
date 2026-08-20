@@ -1,100 +1,56 @@
 ---
 title: For AI agents
-description: Implementation rules and source links for coding assistants that integrate konekt.
+description: Reading order, non-negotiable rules, and a map from task to page for coding assistants that integrate konekt.
 ---
 
-You are integrating **konekt**, a small browser client for WalletConnect v2. Use the public APIs below as written. Do not invent aliases or wrapper APIs that duplicate them.
+You are integrating **konekt**, a small browser client for WalletConnect v2. This page is a router: it lists the rules that are easy to get wrong and points at the one page that documents each task. Everything else is written once, somewhere else, so the two cannot drift apart.
 
 ## Read in this order
 
 1. This page.
-2. [`skills/konekt/SKILL.md`](../skills/konekt/SKILL.md) for provider, chain, request, and authentication code.
-3. [`skills/konekt-ui/SKILL.md`](../skills/konekt-ui/SKILL.md) for React wallet UI.
-4. [`llms-full.txt`](../llms-full.txt) when you need all human-facing guides in one document.
-5. Generated [API pages](../api/readme/) only when you need the exact type of a specific export.
+2. [`skills/konekt/SKILL.md`](../skills/konekt/SKILL.md) — provider, chains, requests, features, wallet events.
+3. [`skills/konekt-ui/SKILL.md`](../skills/konekt-ui/SKILL.md) — React wallet UI.
+4. The guide for the task you were given, from the map below.
+5. [`llms-full.txt`](../llms-full.txt) when you need every human-facing guide in one document.
+6. Generated [API pages](../api/readme/) when you need the exact type of a specific export.
 
-## Minimal browser integration
+## Non-negotiable rules
 
-```ts
-import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+These are the mistakes that compile, run, and then fail in production or leak. Check every generated integration against them.
 
-const provider = await Provider.init({
-  projectId,
-  metadata: { name, description, url, icons },
-  chains: evm(1),
-});
+- Applications call `Provider.init(opts)`; it returns a process singleton and the first options win. Tests call `Provider.create(opts, deps?)`. Do not add `createProvider()` or any function that only forwards to a static method.
+- `chains` takes `Chain` objects from adapter subpaths (`evm(1, 8453)`, `[evm(1), solana]`), never bare numeric IDs, and there is no provider-level `rpcUrl`.
+- JSON-RPC reads need an explicit `read` transport on the chain: `evm(1, { read: http(url) })`. Without one, a read throws `4200` rather than falling back to a public node.
+- Features are proposal hooks, not wrappers around `request()`. A feature writes its key under `Proposal.requests` and reads the matching key back from `Session.proposalRequestsResponses`.
+- Never make an authentication decision in the browser. `konekt/siwe` asks and binds; the server calls both `verifyCacao()` and `checkClaims()` from `konekt/cacao` with a single-use nonce it issued.
+- Keep `konekt/cacao` out of browser bundles, and keep subpath imports intact instead of re-exporting adapters and features through an application barrel.
+- Konekt reports UI work through events. Register `display_uri` before `connect()`, and let application code — not the library — open wallet URLs.
+- Do not add `konekt/solana-client` or `konekt/cosmjs`. Solana and CosmJS use application-owned bridges copied into the app.
 
-provider.on("display_uri", showPairingUri);
-await provider.connect();
-```
+## Where each task is documented
 
-## Public API
+| Task | Page |
+| --- | --- |
+| First provider, first connection | [Getting started](../guides/getting-started/) |
+| Chain adapters, read transports, targeting one chain | [Chains and networks](../guides/chains/) |
+| `Provider.init` options, persistence, expiry, disconnect | [Sessions and options](../guides/sessions/) |
+| SIWE, CACAO verification, custom features | [Authentication](../guides/features/) |
+| Pairing URI, wallet redirects, cancelling a connection | [Wallet UI](../guides/wallet-ui/) |
+| `WalletModal`, `ConnectButton`, pairing hooks | [konekt-ui](../guides/konekt-ui/) |
+| Next.js, Vite, SSR, client-only initialization | [Frameworks and SSR](../guides/frameworks/) |
+| Measured sizes, lazy loading, entry-point choice | [Bundle size and loading](../guides/bundle-size/) |
+| Error codes and thrown messages | [Troubleshooting](../guides/troubleshooting/) |
+| viem, ethers, wagmi | [viem](../guides/viem/), [ethers](../guides/ethers/), [wagmi](../guides/wagmi/) |
+| Solana, Bitcoin, CosmJS | [Solana](../guides/solana/), [Bitcoin](../guides/bitcoin/), [CosmJS](../guides/cosmjs/) |
+| Replacing `@walletconnect/ethereum-provider` | [Migration guide](../guides/migrate-ethereum-provider/) |
 
-- Application code calls `Provider.init(opts)`. It returns the process singleton and uses the default relay URL and storage unless configured otherwise.
-- Tests call `Provider.create(opts, deps?)`. It returns a new instance. Inject `relay`, `session`, `seed`, or `storage` to replace internals. A supplied `session` must not cause a real socket to open.
-- Do not add `createProvider()` or any function that only forwards to a static method.
-
-## Chains
-
-- Import each adapter from its subpath: `konekt/eip155`, `konekt/solana`, `konekt/bip122`, `konekt/cosmos`, or `konekt/generic`.
-- `chains` accepts `Chain` objects. Valid examples are `evm(1, 8453)` and `[evm(1), solana]`. The provider flattens one array level. Never pass numeric IDs directly as `chains`.
-- Configure EVM JSON-RPC reads with `evm(1, { read: http(url) })`, importing `http` from `konekt/http`. There is no provider-level `rpcUrl`.
-- Give each EVM network its own `evm(id, { read })` call when its RPC URL differs.
-- `provider.request(args, chainId)` targets one configured CAIP-2 chain for that call and does not move the active chain.
-- Wallet methods go to the wallet. EVM `eth_*`, `net_*`, and `web3_*` reads use `read` only after wallet methods have been classified.
-
-## Features
-
-- Add features as `features: [siwe(...)]`. Features are connection hooks, not wrappers around `request()`.
-- A feature writes its own key under `Proposal.requests` and reads the matching key from `Session.proposalRequestsResponses`.
-- `onProposal` is awaited before publication, so fetch a fresh nonce there.
-- If `onSettle` throws, `connect()` rejects and the provider disconnects the settled session.
-- Browser code uses `konekt/siwe` to request authentication and bind the returned account to the session.
-- Server code uses both `verifyCacao()` and `checkClaims()` from `konekt/cacao`. A signature check without domain, URI, nonce, and time checks is incomplete.
-- Never make an authentication decision in the browser.
-
-## Integrations
-
-- viem: pass the connected EVM provider to `custom(provider)`. Wallet clients use Konekt; public clients either use the same custom transport with an EVM `read` transport or viem’s own `http()`.
-- ethers v6: pass the connected EVM provider to `new BrowserProvider(provider)`. Configure `konekt/http` when ethers will send JSON-RPC reads through that provider. Keep account and chain listeners on the Konekt provider.
-- wagmi 3: use an application-owned connector around the Konekt provider. Register it in `createConfig()` and let its `getProvider` initialize Konekt lazily. Wagmi HTTP transports handle reads.
-- Solana: copy the application-owned web3.js or Kit bridges. Encode messages as base58 and transactions as base64. Do not add `konekt/solana-client`.
-- CosmJS: copy separate Amino and direct `OfflineSigner` factories. Convert direct `Uint8Array` fields to base64 and `accountNumber` to a decimal string. Call `cosmos_getAccounts` for `algo` and `pubkey`. Do not add `konekt/cosmjs`.
-- Do not use wagmi private `_internal` APIs for connector registration.
-- Read the matching [viem](../guides/viem/), [ethers](../guides/ethers/), [wagmi](../guides/wagmi/), [Solana](../guides/solana/), or [CosmJS](../guides/cosmjs/) guide before generating integration code.
-
-## Bundle discipline
-
-- Preserve the public entry-point boundaries. Do not create an application barrel that re-exports every Konekt adapter and feature.
-- Omit `konekt/http` when viem or wagmi already owns all public reads.
-- Import `konekt/cacao` only in trusted server code.
-- To lazy-load Konekt, dynamically import the provider, chains, and features together before the first `Provider.init()` call. Later calls cannot add options to the singleton.
-- A wagmi connector may remain statically registered while its `getProvider()` dynamically imports Konekt.
-- Read [Bundle size and loading](../guides/bundle-size/) for measured sizes and complete lazy-loading examples.
-
-## Wallet UI
-
-- Konekt reports UI work through events. It must not unexpectedly navigate or render.
-- `display_uri` carries the temporary pairing URI. Register the listener before `connect()`.
-- `request_sent` carries `{ id, topic, url }`; the app may open `url` when present.
-- `formatWalletRedirect(href, id, topic)` builds a request redirect when the app already knows the wallet URL.
-- For React without wagmi, use `WalletModal` with `useProviderPairing` from `konekt-ui`.
-- For an existing wagmi integration, use `ConnectButton` or `useWagmiPairing` from `konekt-ui/wagmi`.
-- Import `konekt-ui/styles.css` unless the component is intentionally `unstyled`.
-
-## Errors
-
-- `4100` means there is no session; await `connect()` first.
-- `4200` means an EVM read has no `read` transport or the method is unsupported.
-- `-32602` means request parameters are malformed.
+Read the matching page before generating code for that task. Do not infer an API from a neighbouring guide.
 
 ## Completion checklist
 
-- Listen for the pairing URI before starting a connection.
-- Cancel pending pairing when its UI closes.
-- Configure chain objects, not bare IDs.
-- Keep wallet writes and HTTP reads on their intended routes.
-- Keep server verification modules out of the browser bundle.
-- Open wallet URLs in application UI code.
-- Verify authentication on the server with a single-use nonce and both CACAO checks.
+- The `display_uri` listener is registered before `connect()`, and pairing is aborted when its UI closes.
+- Chains are adapter objects, and every network that needs reads has its own `read` transport.
+- Wallet writes go to the wallet; `eth_*`, `net_*`, and `web3_*` reads go to `read`.
+- Server verification modules are absent from the browser bundle.
+- Authentication is decided on the server, with a single-use nonce and both CACAO checks.
+- Wallet URLs are opened by application UI code.

@@ -91,16 +91,28 @@ if (cacaos.length === 0) {
 }
 ```
 
-Recap resources (`urn:recap:`) are not implemented.
+Recap resources (`urn:recap:`) are not implemented. Passing a `urn:recap:` entry in `resources` makes `siwe()` throw immediately, and `verifyCacao()` reports `unverifiable` for a message that carries one, so neither side can silently ignore a capability it does not enforce.
 
 ## Verify authentication on the server
 
 The server must validate both the signed message and the claims inside it:
 
 - `verifyCacao()` checks the cryptographic signature.
-- `checkClaims()` checks the domain, nonce, URI, expiration time, and not-before time.
+- `checkClaims()` checks the domain and nonce, enforces the `exp` and `nbf` time limits, and compares the audience URI when you pass `uri`.
 
 Neither check replaces the other. A valid signature over an old or attacker-issued nonce is not a valid login.
+
+Both functions return `valid`, `invalid`, or `unverifiable`:
+
+| Status | Meaning | Authentication decision |
+| --- | --- | --- |
+| `valid` | The check passed. | Continue only after both checks are valid. |
+| `invalid` | The signature or a claim is wrong. | Reject authentication. |
+| `unverifiable` | This process could not complete the check, for example because smart-account RPC is unavailable. | Do not authenticate; retry or report a temporary failure. |
+
+`unverifiable` does not prove forgery, but it is never safe to treat it as success.
+
+A wallet returns one CACAO per authenticated account, so the browser posts an array. Verify each one, then consume the nonce once for the whole request:
 
 ```ts
 import type { Cacao } from "konekt";
@@ -110,23 +122,29 @@ import { http } from "konekt/http";
 declare function loadIssuedNonce(browserSessionId: string): Promise<string>;
 declare function consumeIssuedNonce(browserSessionId: string, nonce: string): Promise<boolean>;
 
-async function authenticate(cacao: Cacao, browserSessionId: string) {
-  const nonce = await loadIssuedNonce(browserSessionId);
+const call = http("https://ethereum.example-rpc.com");
 
+async function verifyOne(cacao: Cacao, nonce: string): Promise<string> {
   const claims = checkClaims(cacao.p, {
     domain: "app.example.com",
     uri: "https://app.example.com",
     nonce,
   });
-  if (claims.status !== "valid") {
-    throw new Error(claims.reason);
-  }
+  if (claims.status !== "valid") throw new Error(claims.reason);
 
-  const signature = await verifyCacao(cacao, {
-    call: http("https://ethereum.example-rpc.com"),
-  });
-  if (signature.status !== "valid") {
-    throw new Error(signature.reason);
+  const signature = await verifyCacao(cacao, { call });
+  if (signature.status !== "valid") throw new Error(signature.reason);
+
+  return cacao.p.iss;
+}
+
+async function authenticate(cacaos: Cacao[], browserSessionId: string) {
+  if (cacaos.length === 0) throw new Error("The wallet did not authenticate");
+
+  const nonce = await loadIssuedNonce(browserSessionId);
+  const issuers: string[] = [];
+  for (const cacao of cacaos) {
+    issuers.push(await verifyOne(cacao, nonce));
   }
 
   // Make this an atomic compare-and-delete. Only one request may succeed.
@@ -134,28 +152,51 @@ async function authenticate(cacao: Cacao, browserSessionId: string) {
     throw new Error("This sign-in challenge was already used");
   }
 
-  return cacao.p.iss;
+  return issuers;
 }
 ```
 
+Each issuer is a `did:pkh` string such as `did:pkh:eip155:1:0x…`. Use `parseDidPkh()` from `konekt/cacao` to read its namespace, reference, and address. The wallet lists the account it considers primary first; sign the user in as that account and treat the rest as additional proven addresses.
+
 The `call` option is needed for EIP-1271 smart contract accounts. It must reach JSON-RPC for the issuer’s chain. Ordinary EIP-191 account signatures can be checked without it.
 
-Both verification functions return one of these results:
-
-| Status | Meaning | Authentication decision |
-| --- | --- | --- |
-| `valid` | The check passed. | Continue only after both checks are valid. |
-| `invalid` | The signature or claim is wrong. | Reject authentication. |
-| `unverifiable` | This process could not complete the check, for example because smart-account RPC is unavailable. | Do not authenticate; retry or report a temporary failure. |
-
-`unverifiable` does not prove forgery, but it is never safe to treat it as success.
+Consume the nonce once per request, as above. Consuming it inside the loop makes every CACAO after the first fail.
 
 ## Write a custom feature
 
-A feature is a hook object passed in `features`. It can add a feature-owned key to `Proposal.requests` in `onProposal`, then read the matching key from `Session.proposalRequestsResponses` in `onSettle`.
+A feature is a plain object passed in `features`. It owns one key under `Proposal.requests` and reads the wallet’s answer back from the matching key of `Session.proposalRequestsResponses`. Konekt carries both containers without interpreting them, so a new feature is not a change to the provider.
 
-- `onProposal` is awaited before publishing, so it may fetch a challenge.
-- If `onSettle` throws, `connect()` rejects and the settled session is disconnected.
-- `onDisconnect` can clear feature state.
+```ts
+import type { Feature } from "konekt";
+
+export function greeting(text: string): Feature {
+  let sent: string | undefined;
+
+  return {
+    name: "greeting",
+
+    async onProposal(proposal) {
+      sent = text;
+      return { ...proposal, requests: { ...proposal.requests, greeting: { text } } };
+    },
+
+    onSettle(session) {
+      const answer = session.proposalRequestsResponses?.greeting;
+      if (sent && !answer) throw new Error("The wallet ignored the greeting request");
+    },
+
+    onDisconnect() {
+      sent = undefined;
+    },
+  };
+}
+```
+
+The contract in full:
+
+- `name` is required. Konekt uses it in diagnostics.
+- `onProposal` is awaited before the proposal is published, so it may fetch a server challenge. Return the proposal you want published; returning nothing keeps the current one.
+- `onSettle` runs after the wallet approves. Throwing rejects `connect()` and disconnects the session Konekt just settled, so it never leaves a half-authenticated session behind.
+- `onDisconnect` clears feature-owned state.
 
 Features participate in connection setup. They do not wrap or intercept `provider.request()`.

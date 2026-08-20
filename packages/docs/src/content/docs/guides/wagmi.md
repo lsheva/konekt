@@ -38,7 +38,7 @@ The connector:
 
 ## Create the wagmi config
 
-Register the connector next to injected browser wallets:
+Register the connector next to injected browser wallets. Save this as `src/web3.tsx`:
 
 ```tsx
 import type { ReactNode } from "react";
@@ -91,7 +91,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
 }
 ```
 
-Registering the connector does not open a relay socket. Its provider is created only when wagmi calls the connector.
+Registering the connector does not open a relay socket. On mount, wagmi asks every connector whether it is already authorized, which makes this connector dynamically import Konekt and call `Provider.init()`. That restores a saved session, and it connects to the relay only when a saved session exists.
 
 The wagmi `transports` are intentionally separate from Konekt’s optional EVM `read` transport. Wagmi sends public reads through its viem clients and sends wallet actions through the active connector.
 
@@ -226,11 +226,42 @@ export function CustomWalletButton({ projectId }: { projectId: string }) {
 
 ## Static and lazy connector registration
 
-Static registration in `createConfig()` is the recommended path. The connector already delays `Provider.init()` until first use, so registration has no relay cost.
+Static registration in `createConfig()` is the recommended path, and the one this guide uses. Because the connector imports Konekt lazily inside `getProvider()`, registration costs one dynamic import during wagmi’s reconnect and no relay socket unless a saved session exists.
 
-`ConnectButton` and `useWagmiPairing` also accept `getWalletConnect` for applications with their own supported runtime connector-registration mechanism. Avoid depending on wagmi’s private `_internal` APIs in production integration code.
+That import still happens for a visitor who never connects a wallet. If you need Konekt entirely absent until someone opens the wallet picker, pass `getWalletConnect` to `ConnectButton` or `useWagmiPairing()` and create the connector on demand:
 
-To keep the provider and modal out of the initial page chunk, follow the [lazy-loading patterns and measured bundle sizes](../bundle-size/).
+```tsx
+import { useCallback, useRef } from "react";
+import type { Connector } from "wagmi";
+import { useConfig } from "wagmi";
+import { ConnectButton } from "konekt-ui/wagmi";
+import { abortPairing, konekt } from "./konekt";
+import { konektOptions } from "./web3";
+
+export function WalletControls() {
+  const config = useConfig();
+  const connector = useRef<Connector>(undefined);
+
+  const getWalletConnect = useCallback(async () => {
+    // `_internal` is wagmi's private API. Registering a connector after
+    // createConfig() has no public equivalent in wagmi 3.
+    connector.current ??= config._internal.connectors.setup(konekt(konektOptions));
+    return connector.current;
+  }, [config]);
+
+  return (
+    <ConnectButton
+      projectId={konektOptions.projectId}
+      getWalletConnect={getWalletConnect}
+      onDismiss={abortPairing}
+    />
+  );
+}
+```
+
+This is the trade-off the repository’s [example app](https://github.com/lsheva/konekt/tree/main/packages/example) demonstrates. Weigh it deliberately: `config._internal` is not part of wagmi’s public API and can change in a minor release. Prefer static registration unless the initial-chunk saving matters for your app, and pin your wagmi version if you adopt this pattern.
+
+To keep the provider and modal out of the initial page chunk in other ways, follow the [lazy-loading patterns and measured bundle sizes](../bundle-size/).
 
 ## Troubleshooting
 
