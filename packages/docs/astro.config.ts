@@ -41,6 +41,7 @@ export default defineConfig({
           label: "Guides",
           items: [
             { label: "Getting started", slug: "guides/getting-started" },
+            { label: "Why Konekt is better", slug: "guides/why-konekt" },
             { label: "Chains and networks", slug: "guides/chains" },
             { label: "Authentication", slug: "guides/features" },
             { label: "Wallet UI", slug: "guides/wallet-ui" },
@@ -87,6 +88,7 @@ export default defineConfig({
           promote: [
             "index*",
             "guides/getting-started*",
+            "guides/why-konekt*",
             "guides/bundle-size*",
             "guides/viem*",
             "guides/ethers*",
