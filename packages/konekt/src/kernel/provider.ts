@@ -1,4 +1,4 @@
-import { randomBytes } from "@noble/hashes/utils";
+import { randomBytes } from "./crypto.ts";
 import type { OnDebug } from "./debug.ts";
 import { createEmitter, type Emitter } from "./emitter.ts";
 import {

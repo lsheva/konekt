@@ -1,5 +1,5 @@
-import { randomBytes } from "@noble/hashes/utils";
 import { fromHex, toHex } from "./bytes.ts";
+import { randomBytes } from "./crypto.ts";
 
 /**
  * Asynchronous key-value storage used for the relay identity and session.

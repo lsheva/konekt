@@ -1,13 +1,16 @@
 import { spawnSync } from "node:child_process";
 import { appendFile, readFile, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 const reportPath = "size-report.json";
-const commentPath = ".size-limit-comment.md";
+const root = new URL("../", import.meta.url);
+const reportUrl = new URL(reportPath, root);
+const commentUrl = new URL(".size-limit-comment.md", root);
 const update = process.argv.includes("--update");
 
 function run(command, args) {
   return spawnSync(command, args, {
-    cwd: import.meta.dirname,
+    cwd: fileURLToPath(root),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },
   });
@@ -29,7 +32,7 @@ function parseReport(text) {
 
 async function readCommittedReport() {
   try {
-    return parseReport(await readFile(new URL(reportPath, import.meta.url), "utf8"));
+    return parseReport(await readFile(reportUrl, "utf8"));
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") return undefined;
     throw error;
@@ -95,14 +98,14 @@ const committed = await readCommittedReport();
 const stale = JSON.stringify(committed) !== JSON.stringify(current);
 
 if (update) {
-  await writeFile(new URL(reportPath, import.meta.url), `${JSON.stringify(current, null, 2)}\n`);
+  await writeFile(reportUrl, `${JSON.stringify(current, null, 2)}\n`);
 }
 
 const baseRef = process.env.SIZE_LIMIT_BASE;
 const base = readBaseReport(baseRef) ?? (update ? committed : baseRef ? undefined : committed);
 const body = markdown(base, current, !update && stale, sizeLimit.status !== 0);
 process.stdout.write(body);
-await writeFile(new URL(commentPath, import.meta.url), body);
+await writeFile(commentUrl, body);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
   await appendFile(process.env.GITHUB_STEP_SUMMARY, body);

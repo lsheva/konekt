@@ -11,7 +11,10 @@ These are production bundle measurements from the repository’s `pnpm size` che
 
 | Import | Minified + gzip |
 | --- | ---: |
-| `Provider` + `evm` | 27.49 kB |
+| `Provider` + `evm` initial chunk | 9.69 kB |
+| ChaCha20-Poly1305 lazy chunk | 4.84 kB |
+| Ed25519/X25519 compatibility chunk | 13.80 kB |
+| SHA-256/HKDF compatibility chunk | 2.96 kB |
 | `http` | 253 B |
 | `siwe` + `cacaosOf` | 844 B |
 | `verifyCacao` + `checkClaims` | 17.36 kB |
@@ -19,6 +22,10 @@ These are production bundle measurements from the repository’s `pnpm size` che
 | `WalletModal` + `useProviderPairing` | 9.55 kB |
 | wagmi `ConnectButton` | 11.02 kB |
 | `konekt-ui/styles.css` | 2.85 kB |
+
+The provider uses Web Crypto for Ed25519, X25519, SHA-256, and HKDF. Its initial row excludes the Noble compatibility chunks, which are loaded automatically only when a platform operation is unavailable. WalletConnect encryption uses a lazy ChaCha20-Poly1305 chunk because browsers do not standardize that cipher in Web Crypto; it loads on the first encrypted protocol message.
+
+Current native secure-curve support starts with Chrome 137, Firefox 130, and Safari 18.4. Older runtimes continue to work through the compatibility chunk. Web Crypto requires a secure browser context such as HTTPS or localhost.
 
 The check bundles the listed exports and their runtime dependencies with esbuild, minifies the result, and reports gzip transfer size. The UI rows include the QR encoder but exclude peer dependencies such as React, viem, and wagmi; those libraries may already be shared by the application. Each row is measured independently, so do not add the rows to predict an application bundle—your bundler can share and deduplicate modules.
 
