@@ -23,6 +23,7 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm check && changeset publish",
+    "pull": "git remote remove publish 2>/dev/null || true; git remote add publish git@github-personal:lsheva/konekt.git; trap 'git remote remove publish 2>/dev/null || true' EXIT; git pull publish HEAD",
     "push": "git remote remove publish 2>/dev/null || true; git remote add publish git@github-personal:lsheva/konekt.git; trap 'git remote remove publish 2>/dev/null || true' EXIT; git push publish HEAD --follow-tags"
   },
   "devDependencies": {

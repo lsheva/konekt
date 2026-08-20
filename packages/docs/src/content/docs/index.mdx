@@ -4,6 +4,8 @@ description: Connect a browser app to WalletConnect wallets with a small, modula
 template: splash
 hero:
   tagline: A better WalletConnect client for performance-minded apps. About 90% smaller than the official headless EVM provider, with explicit chains and no @walletconnect runtime.
+  image:
+    html: '<img src="./favicon.svg" alt="The Konekt mark" width="400" height="400" style="border-radius: 20%">'
   actions:
     - text: Get started
       link: ./guides/getting-started/
@@ -31,11 +33,14 @@ Konekt gives your app an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)-com
   <Card title="Your stack stays in charge" icon="setting">
     Keep viem, wagmi, ethers, your RPCs, and your design system. Konekt owns WalletConnect sessions and requests—not the rest of your application.
   </Card>
+  <Card title="Measured, not guessed" icon="document">
+    See the versioned bundle measurements and full comparison with Reown.
+
+    <LinkButton href="./guides/why-konekt/" variant="minimal">Read the comparison →</LinkButton>
+  </Card>
 </CardGrid>
 
-[See the versioned measurements and full Reown comparison →](./guides/why-konekt/)
-
-<CardGrid stagger>
+<CardGrid>
   <Card title="Start with one provider" icon="rocket">
     Call `Provider.init()` once, show the pairing QR, and wait for the user to approve the connection in their wallet.
   </Card>
