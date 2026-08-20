@@ -7,6 +7,10 @@ Connect UI for `konekt`. Two entry points:
 
 The theme is a plain stylesheet: `import "konekt-ui/styles.css"`.
 
+```sh
+pnpm add konekt-ui react
+```
+
 ## Any provider
 
 `WalletModal` does not know what it is pairing with. It takes a `Pairing`, and `useProviderPairing` builds one from a `konekt` provider:
@@ -82,3 +86,7 @@ Skip `konekt-ui/styles.css` and pass `unstyled` to drop the default `kui-*` clas
   border-radius: 24px;
 }
 ```
+
+## License
+
+[ISC](./LICENSE)

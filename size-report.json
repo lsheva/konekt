@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Provider + EVM",
+    "size": 27495,
+    "limit": 30000
+  },
+  {
+    "name": "HTTP read transport",
+    "size": 253,
+    "limit": 300
+  },
+  {
+    "name": "SIWE feature",
+    "size": 844,
+    "limit": 1000
+  },
+  {
+    "name": "CACAO verifier",
+    "size": 17360,
+    "limit": 20000
+  },
+  {
+    "name": "Solana adapter",
+    "size": 731,
+    "limit": 900
+  },
+  {
+    "name": "Wallet modal",
+    "size": 9547,
+    "limit": 11000
+  },
+  {
+    "name": "wagmi connect UI",
+    "size": 11018,
+    "limit": 12500
+  },
+  {
+    "name": "konekt-ui styles",
+    "size": 2854,
+    "limit": 3500
+  }
+]

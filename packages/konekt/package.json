@@ -1,26 +1,110 @@
 {
   "name": "konekt",
   "version": "0.1.0",
-  "description": "Minimal WalletConnect v2 EVM provider",
+  "description": "Minimal, modular WalletConnect v2 provider",
+  "license": "ISC",
+  "author": "lsheva",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lsheva/konekt.git",
+    "directory": "packages/konekt"
+  },
+  "homepage": "https://lsheva.github.io/konekt/",
+  "bugs": {
+    "url": "https://github.com/lsheva/konekt/issues"
+  },
+  "keywords": [
+    "walletconnect",
+    "ethereum",
+    "solana",
+    "bitcoin",
+    "cosmos",
+    "provider"
+  ],
   "type": "module",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./eip155": "./src/chains/eip155.ts",
-    "./solana": "./src/chains/solana.ts",
-    "./bip122": "./src/chains/bip122.ts",
-    "./cosmos": "./src/chains/cosmos.ts",
-    "./generic": "./src/chains/generic.ts",
-    "./siwe": "./src/features/siwe.ts",
-    "./cacao": "./src/features/cacao.ts",
-    "./http": "./src/http.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./eip155": {
+      "types": "./dist/chains/eip155.d.ts",
+      "import": "./dist/chains/eip155.js"
+    },
+    "./solana": {
+      "types": "./dist/chains/solana.d.ts",
+      "import": "./dist/chains/solana.js"
+    },
+    "./bip122": {
+      "types": "./dist/chains/bip122.d.ts",
+      "import": "./dist/chains/bip122.js"
+    },
+    "./cosmos": {
+      "types": "./dist/chains/cosmos.d.ts",
+      "import": "./dist/chains/cosmos.js"
+    },
+    "./generic": {
+      "types": "./dist/chains/generic.d.ts",
+      "import": "./dist/chains/generic.js"
+    },
+    "./siwe": {
+      "types": "./dist/features/siwe.d.ts",
+      "import": "./dist/features/siwe.js"
+    },
+    "./cacao": {
+      "types": "./dist/features/cacao.d.ts",
+      "import": "./dist/features/cacao.js"
+    },
+    "./http": {
+      "types": "./dist/http.d.ts",
+      "import": "./dist/http.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "eip155": [
+        "./dist/chains/eip155.d.ts"
+      ],
+      "solana": [
+        "./dist/chains/solana.d.ts"
+      ],
+      "bip122": [
+        "./dist/chains/bip122.d.ts"
+      ],
+      "cosmos": [
+        "./dist/chains/cosmos.d.ts"
+      ],
+      "generic": [
+        "./dist/chains/generic.d.ts"
+      ],
+      "siwe": [
+        "./dist/features/siwe.d.ts"
+      ],
+      "cacao": [
+        "./dist/features/cacao.d.ts"
+      ],
+      "http": [
+        "./dist/http.d.ts"
+      ]
+    }
   },
   "files": [
+    "dist",
     "src",
+    "LICENSE",
+    "README.md",
     "SKILL.md"
   ],
   "scripts": {
-    "test": "node --env-file=../../.env --test test/*.test.ts",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+    "prepack": "pnpm build",
+    "test": "node --env-file-if-exists=../../.env --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome format --write ."
@@ -41,8 +125,5 @@
     "typescript": "^5.9.2",
     "viem": "^2.55.18",
     "ws": "^8.18.3"
-  },
-  "engines": {
-    "node": ">=24"
   }
 }

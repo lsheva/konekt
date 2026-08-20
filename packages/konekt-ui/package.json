@@ -2,20 +2,61 @@
   "name": "konekt-ui",
   "version": "0.1.0",
   "description": "Connect and account UI for konekt",
+  "license": "ISC",
+  "author": "lsheva",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lsheva/konekt.git",
+    "directory": "packages/konekt-ui"
+  },
+  "homepage": "https://lsheva.github.io/konekt/guides/konekt-ui/",
+  "bugs": {
+    "url": "https://github.com/lsheva/konekt/issues"
+  },
+  "keywords": [
+    "walletconnect",
+    "react",
+    "wallet",
+    "modal",
+    "wagmi"
+  ],
   "type": "module",
+  "types": "./dist/index.d.ts",
   "sideEffects": [
     "**/*.css"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./wagmi": "./src/wagmi/index.ts",
-    "./styles.css": "./src/styles.css"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./wagmi": {
+      "types": "./dist/wagmi/index.d.ts",
+      "import": "./dist/wagmi/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "wagmi": [
+        "./dist/wagmi/index.d.ts"
+      ]
+    }
   },
   "files": [
+    "dist",
     "src",
+    "LICENSE",
+    "README.md",
     "SKILL.md"
   ],
   "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/styles.css', 'dist/styles.css')\"",
+    "prepack": "pnpm build",
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check ."

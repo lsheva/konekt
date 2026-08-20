@@ -8,3 +8,4 @@ packages/docs/public/skills
 cache
 artifacts
 .env
+.size-limit-comment.md
