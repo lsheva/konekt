@@ -2,7 +2,7 @@ import { access, readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = dirname(fileURLToPath(import.meta.url));
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const entries = [
   "packages/konekt/dist/index.js",
   "packages/konekt/dist/chains/eip155.js",

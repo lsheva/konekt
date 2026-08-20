@@ -1,5 +1,4 @@
 import { toHex } from "./bytes.ts";
-import { hashMessage } from "./crypto.ts";
 import { type DebugEvent, log, type OnDebug } from "./debug.ts";
 import { createDedupe } from "./dedupe.ts";
 import { signJwt } from "./jwt.ts";
@@ -16,6 +15,7 @@ type Rpc = {
 };
 
 type Stored = { topic: string; message: string };
+type RelayUrl = string | (() => Promise<string>);
 type Pending = {
   resolve: (v: unknown) => void;
   reject: (e: Error) => void;
@@ -46,7 +46,8 @@ function abortError(signal?: AbortSignal) {
 }
 
 export class RelayClient {
-  #url: string;
+  #url: RelayUrl;
+  #resolvedUrl: Promise<string> | undefined;
   #onDebug: OnDebug | undefined;
   #ws: WebSocket | undefined;
   #userClosed = false;
@@ -58,7 +59,7 @@ export class RelayClient {
   #pending = new Map<string, Pending>();
   #handlers: Array<(topic: string, message: string) => void> = [];
 
-  constructor(url: string, onDebug?: OnDebug) {
+  constructor(url: RelayUrl, onDebug?: OnDebug) {
     this.#url = url;
     this.#onDebug = onDebug;
   }
@@ -68,7 +69,7 @@ export class RelayClient {
   }
 
   #dispatch(topic: string, message: string) {
-    if (!this.#accept(hashMessage(`${topic}:${message}`))) return;
+    if (!this.#accept(`${topic}:${message}`)) return;
     this.#emit({ type: "inbound", topic });
     for (const fn of this.#handlers) fn(topic, message);
   }
@@ -189,13 +190,23 @@ export class RelayClient {
     if (!this.#userClosed) this.#scheduleReconnect();
   }
 
+  #relayUrl() {
+    if (typeof this.#url === "string") return Promise.resolve(this.#url);
+    this.#resolvedUrl ??= this.#url().catch((error) => {
+      this.#resolvedUrl = undefined;
+      throw error;
+    });
+    return this.#resolvedUrl;
+  }
+
   async connect() {
     if (this.#userClosed) return;
     if (this.#ws?.readyState === WebSocket.OPEN) return;
     if (this.#fatal) throw new Error("relay rejected auth");
-    const socket = new WebSocket(this.#url);
+    const url = await this.#relayUrl();
+    const socket = new WebSocket(url);
     this.#ws = socket;
-    log("i", "connect", { host: new URL(this.#url).host });
+    log("i", "connect", { host: new URL(url).host });
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("relay connect timeout")), CONNECT_TIMEOUT_MS);
       unref(timer);
@@ -323,5 +334,8 @@ export function openRelay(opts: {
   onDebug?: OnDebug | undefined;
 }): RelayClient {
   const url = opts.url ?? DEFAULT_RELAY_URL;
-  return new RelayClient(formatRelayUrl(url, signJwt(toHex(opts.seed), url, opts.seed), opts.projectId), opts.onDebug);
+  return new RelayClient(
+    async () => formatRelayUrl(url, await signJwt(toHex(opts.seed), url, opts.seed), opts.projectId),
+    opts.onDebug,
+  );
 }

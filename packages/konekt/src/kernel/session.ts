@@ -73,7 +73,9 @@ export class SessionClient {
   #ttl: TtlConfig;
   #keys = new Map<string, string>();
   #pending = new Map<number, Pending>();
-  #self = generateX25519();
+  #self: Awaited<ReturnType<typeof generateX25519>> | undefined;
+  #selfPromise: Promise<Awaited<ReturnType<typeof generateX25519>>> | undefined;
+  #messages = Promise.resolve();
   #pairingTopic: string | undefined;
   #proposalId: number | undefined;
   #lastUpdateId: number | undefined;
@@ -95,7 +97,15 @@ export class SessionClient {
     this.#onDebug = opts.onDebug;
     this.#onRequestSent = opts.onRequestSent;
     this.#ttl = { ...TTL, ...opts.ttl };
-    this.#relay.onMessage((topic, message) => this.#onMessage(topic, message));
+    this.#relay.onMessage((topic, message) => {
+      this.#messages = this.#messages
+        .then(() => this.#onMessage(topic, message))
+        .catch((e) => {
+          const error = e instanceof Error ? e : new Error(String(e));
+          this.#finishSettle()?.reject(error);
+          log("i", "session message failed", { error: error.message });
+        });
+    });
   }
 
   get uri() {
@@ -104,6 +114,20 @@ export class SessionClient {
 
   get session() {
     return this.#current;
+  }
+
+  #prepareSelf() {
+    this.#selfPromise ??= generateX25519().then(
+      (self) => {
+        this.#self = self;
+        return self;
+      },
+      (error) => {
+        this.#selfPromise = undefined;
+        throw error;
+      },
+    );
+    return this.#selfPromise;
   }
 
   async restore() {
@@ -122,8 +146,9 @@ export class SessionClient {
   }
 
   async connect(signal?: AbortSignal) {
+    const self = await this.#prepareSelf();
     const pairingSym = randomHex32();
-    this.#pairingTopic = hashKey(pairingSym);
+    this.#pairingTopic = await hashKey(pairingSym);
     this.#put(this.#pairingTopic, pairingSym);
     const expiryTimestamp = now() + this.#ttl.propose;
     this.#uri = formatUri({
@@ -144,7 +169,7 @@ export class SessionClient {
       requiredNamespaces: {},
       optionalNamespaces: this.#namespaces,
       relays: [{ protocol: "irn" }],
-      proposer: { publicKey: this.#self.publicKey, metadata: this.#metadata },
+      proposer: { publicKey: self.publicKey, metadata: this.#metadata },
       expiryTimestamp,
     };
     const proposal = {
@@ -157,7 +182,7 @@ export class SessionClient {
       log("→", "wc_proposeSession", { id: this.#proposalId, pairingTopic: this.#pairingTopic });
       await this.#relay.proposeSession(
         this.#pairingTopic,
-        encrypt(pairingSym, JSON.stringify(proposal)),
+        await encrypt(pairingSym, JSON.stringify(proposal)),
         this.#ttl.propose,
       );
     } catch (e) {
@@ -287,7 +312,7 @@ export class SessionClient {
   ) {
     const sym = this.#keys.get(topic);
     if (!sym) throw new Error(`no key for ${topic}`);
-    await this.#relay.publish(topic, encrypt(sym, JSON.stringify(payload)), pubOpts, signal);
+    await this.#relay.publish(topic, await encrypt(sym, JSON.stringify(payload)), pubOpts, signal);
   }
 
   #notifyRequestSent(id: number, topic: string) {
@@ -298,24 +323,24 @@ export class SessionClient {
     this.#onRequestSent?.({ id, topic, url });
   }
 
-  #parse(topic: string, message: string): Json | undefined {
+  async #parse(topic: string, message: string): Promise<Json | undefined> {
     const sym = this.#keys.get(topic);
     if (!sym) return;
     try {
-      return JSON.parse(decrypt(sym, message)) as Json;
+      return JSON.parse(await decrypt(sym, message)) as Json;
     } catch {
       log("←", "decrypt failed", { topic });
       return;
     }
   }
 
-  #onMessage(topic: string, message: string) {
-    const msg = this.#parse(topic, message);
+  async #onMessage(topic: string, message: string) {
+    const msg = await this.#parse(topic, message);
     if (!msg) return;
-    this.#handle(topic, msg);
+    await this.#handle(topic, msg);
   }
 
-  #handle(topic: string, msg: Json) {
+  async #handle(topic: string, msg: Json) {
     log("←", msg.method ?? (msg.result !== undefined ? "result" : "error"), {
       id: msg.id,
       topic,
@@ -327,6 +352,8 @@ export class SessionClient {
         if (!msg.params) break;
         const pairingTopic = this.#pairingTopic;
         if (!pairingTopic) return;
+        const self = this.#self;
+        if (!self) throw new Error("session key is not prepared");
         const params = msg.params as {
           relay: { protocol: string };
           namespaces: Session["namespaces"];
@@ -342,19 +369,23 @@ export class SessionClient {
           expiry: params.expiry,
           namespaces: params.namespaces,
           controller: params.controller.publicKey,
-          self: { publicKey: this.#self.publicKey, metadata: this.#metadata },
+          self: { publicKey: self.publicKey, metadata: this.#metadata },
           peer: { publicKey: params.controller.publicKey, metadata: params.controller.metadata },
           ...(params.sessionConfig ? { sessionConfig: params.sessionConfig } : {}),
           proposalRequestsResponses: params.proposalRequestsResponses,
         };
         this.#fire("persist session", this.#persistSession());
-        this.#ack(topic, msg.id, this.#ttl.propose, TAG.sessionSettleRes);
+        try {
+          await this.#ack(topic, msg.id, this.#ttl.propose, TAG.sessionSettleRes);
+        } catch (e) {
+          log("i", "settle ack failed", { error: e instanceof Error ? e.message : String(e) });
+        }
         this.#onDebug?.({ type: "settle" });
         this.#finishSettle()?.resolve(this.#current);
         return;
       }
       case "wc_sessionPing":
-        this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionPingRes);
+        this.#fire("ack", this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionPingRes));
         return;
       case "wc_sessionEvent": {
         const event = msg.params?.event as { name: string; data: unknown } | undefined;
@@ -376,7 +407,7 @@ export class SessionClient {
           this.#current = { ...this.#current, namespaces };
           this.#fire("persist session", this.#persistSession());
         }
-        this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionUpdateRes);
+        this.#fire("ack", this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionUpdateRes));
         this.#onEvent?.({ type: "update", namespaces });
         return;
       }
@@ -388,7 +419,7 @@ export class SessionClient {
           this.#current = { ...this.#current, expiry };
           this.#fire("persist session", this.#persistSession());
         }
-        this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionExtendRes);
+        this.#fire("ack", this.#ack(topic, msg.id, this.#ttl.session, TAG.sessionExtendRes));
         this.#onEvent?.({ type: "extend", expiry });
         return;
       }
@@ -400,20 +431,22 @@ export class SessionClient {
         return;
       }
     }
-    this.#resolve(msg);
+    await this.#resolve(msg);
   }
 
   #ack(topic: string, id: number, ttl: number, tag: number) {
-    this.#fire("ack", this.#pub(topic, { id, jsonrpc: "2.0", result: true }, { ttl, tag }));
+    return this.#pub(topic, { id, jsonrpc: "2.0", result: true }, { ttl, tag });
   }
 
-  #resolve(msg: Json) {
+  async #resolve(msg: Json) {
     if (msg.result && this.#proposalId !== undefined && msg.id === this.#proposalId) {
       const { responderPublicKey } = msg.result as { responderPublicKey: string };
-      const sessionSym = deriveSymKey(this.#self.privateKey, responderPublicKey);
-      const sessionTopic = hashKey(sessionSym);
+      const self = this.#self;
+      if (!self) throw new Error("session key is not prepared");
+      const sessionSym = await deriveSymKey(self.privateKey, responderPublicKey);
+      const sessionTopic = await hashKey(sessionSym);
       this.#put(sessionTopic, sessionSym);
-      this.#fire("subscribe session topic", this.#relay.subscribe(sessionTopic));
+      await this.#relay.subscribe(sessionTopic);
       return;
     }
     const waiter = this.#pending.get(msg.id);

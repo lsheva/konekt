@@ -88,4 +88,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm --filter konekt test
       - run: pnpm check:node

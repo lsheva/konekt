@@ -10,7 +10,39 @@ export default [
       "packages/konekt/dist/index.js": "{ Provider }",
       "packages/konekt/dist/chains/eip155.js": "{ evm }",
     },
-    limit: "30 kB",
+    modifyEsbuildConfig(config) {
+      if (!config) throw new Error("Missing esbuild configuration");
+      const external = "external" in config && Array.isArray(config.external) ? config.external : [];
+      return Object.assign(config, { external: [...external, "@noble/*"] });
+    },
+    limit: "11 kB",
+    gzip,
+  },
+  {
+    name: "Crypto curves fallback",
+    path: "packages/konekt/node_modules/@noble/curves/esm/ed25519.js",
+    import: "{ ed25519, x25519 }",
+    limit: "15.5 kB",
+    gzip,
+  },
+  {
+    name: "Crypto hashes fallback",
+    path: [
+      "packages/konekt/node_modules/@noble/hashes/esm/hkdf.js",
+      "packages/konekt/node_modules/@noble/hashes/esm/sha2.js",
+    ],
+    import: {
+      "packages/konekt/node_modules/@noble/hashes/esm/hkdf.js": "{ hkdf }",
+      "packages/konekt/node_modules/@noble/hashes/esm/sha2.js": "{ sha256 }",
+    },
+    limit: "4 kB",
+    gzip,
+  },
+  {
+    name: "Crypto cipher fallback",
+    path: "packages/konekt/node_modules/@noble/ciphers/esm/chacha.js",
+    import: "{ chacha20poly1305 }",
+    limit: "6 kB",
     gzip,
   },
   {

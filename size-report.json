@@ -1,8 +1,23 @@
 [
   {
     "name": "Provider + EVM",
-    "size": 27495,
-    "limit": 30000
+    "size": 9690,
+    "limit": 11000
+  },
+  {
+    "name": "Crypto curves fallback",
+    "size": 13796,
+    "limit": 15500
+  },
+  {
+    "name": "Crypto hashes fallback",
+    "size": 2955,
+    "limit": 4000
+  },
+  {
+    "name": "Crypto cipher fallback",
+    "size": 4839,
+    "limit": 6000
   },
   {
     "name": "HTTP read transport",

@@ -52,7 +52,10 @@ export default defineConfig({
           label: "Integrations",
           items: [
             { label: "viem", slug: "guides/viem" },
+            { label: "ethers", slug: "guides/ethers" },
             { label: "wagmi", slug: "guides/wagmi" },
+            { label: "Solana", slug: "guides/solana" },
+            { label: "CosmJS", slug: "guides/cosmjs" },
           ],
         },
         {
@@ -80,8 +83,18 @@ export default defineConfig({
           projectName: "konekt",
           description:
             "A small, modular WalletConnect v2 provider for browser apps. Browser ESM with no @walletconnect runtime.",
-          details: `If you are an AI coding assistant integrating this library, read ${origin}/ai/ first, then fetch the matching SKILL.md. Apps call Provider.init; tests call Provider.create. Chains are Chain objects from adapters, not numeric ids. Viem uses custom(provider); wagmi uses an application-owned connector. Features are proposal hooks, not request wrappers. SIWE asks and binds in the browser; the server must call both verifyCacao and checkClaims.`,
-          promote: ["index*", "guides/getting-started*", "guides/bundle-size*", "guides/viem*", "guides/wagmi*", "ai*"],
+          details: `If you are an AI coding assistant integrating this library, read ${origin}/ai/ first, then fetch the matching SKILL.md. Apps call Provider.init; tests call Provider.create. Chains are Chain objects from adapters, not numeric ids. Viem uses custom(provider); ethers uses BrowserProvider(provider); wagmi uses an application-owned connector. Solana and CosmJS use application-owned bridges over namespace requests, not public konekt wrappers. Features are proposal hooks, not request wrappers. SIWE asks and binds in the browser; the server must call both verifyCacao and checkClaims.`,
+          promote: [
+            "index*",
+            "guides/getting-started*",
+            "guides/bundle-size*",
+            "guides/viem*",
+            "guides/ethers*",
+            "guides/wagmi*",
+            "guides/solana*",
+            "guides/cosmjs*",
+            "ai*",
+          ],
           exclude: ["api/**"],
           optionalLinks: [
             {

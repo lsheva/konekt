@@ -1,0 +1,22 @@
+{
+  "name": "integrations",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cosmjs/amino": "^0.39.0",
+    "@cosmjs/proto-signing": "^0.39.0",
+    "@scure/base": "^2.0.0",
+    "@solana/kit": "^7.1.1",
+    "@solana/web3.js": "^1.98.4",
+    "cosmjs-types": "^0.10.1",
+    "konekt": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  }
+}
