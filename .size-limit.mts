@@ -4,7 +4,7 @@ const gzip = true;
 
 export default [
   {
-    name: "Provider + EVM initial",
+    name: "Provider + EVM",
     path: ["packages/konekt/dist/index.js", "packages/konekt/dist/chains/eip155.js"],
     import: {
       "packages/konekt/dist/index.js": "{ Provider }",
