@@ -9,6 +9,8 @@ Konekt separates the provider, chain adapters, read transport, authentication, a
 
 These are production bundle measurements from the repository’s `pnpm size` check:
 
+<!-- size-report:start -->
+
 | Import | Minified + gzip |
 | --- | ---: |
 | `Provider` + `evm` initial chunk | 9.69 kB |
@@ -18,10 +20,12 @@ These are production bundle measurements from the repository’s `pnpm size` che
 | `http` | 253 B |
 | `siwe` + `cacaosOf` | 844 B |
 | `verifyCacao` + `checkClaims` | 17.36 kB |
-| `solana` + `solanaChain` | 732 B |
+| `solana` + `solanaChain` | 731 B |
 | `WalletModal` + `useProviderPairing` | 9.55 kB |
 | wagmi `ConnectButton` | 11.02 kB |
 | `konekt-ui/styles.css` | 2.85 kB |
+
+<!-- size-report:end -->
 
 The provider uses Web Crypto for Ed25519, X25519, SHA-256, and HKDF. Its initial row excludes the Noble compatibility chunks, which are loaded automatically only when a platform operation is unavailable. WalletConnect encryption uses a lazy ChaCha20-Poly1305 chunk because browsers do not standardize that cipher in Web Crypto; it loads on the first encrypted protocol message.
 

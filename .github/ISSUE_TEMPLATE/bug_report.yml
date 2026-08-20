@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in konekt or konekt-ui does not behave as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For anything with a security impact, follow [SECURITY.md](https://github.com/lsheva/konekt/blob/main/SECURITY.md) instead of filing a public issue.
+
+        [Troubleshooting](https://lsheva.github.io/konekt/guides/troubleshooting/) lists every error Konekt throws and its usual cause.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead. Include the exact error message and code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The smallest code that shows the problem, or a link to a repository.
+      render: ts
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: konekt version
+      placeholder: konekt 0.1.0, konekt-ui 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and framework
+      placeholder: Chrome 140, Next.js 15 App Router
+    validations:
+      required: true
+
+  - type: input
+    id: wallet
+    attributes:
+      label: Wallet
+      description: Name and version, if the problem involves a specific wallet.
+      placeholder: MetaMask Mobile 7.5
+
+  - type: textarea
+    id: debug
+    attributes:
+      label: Debug output
+      description: Output from the `onDebug` option, if the problem is a connection or protocol issue.
+      render: text

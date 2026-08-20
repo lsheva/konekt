@@ -7,13 +7,34 @@ Konekt’s Solana adapter forwards WalletConnect methods. It does not implement 
 
 The repository’s tested bridges live in [`packages/integrations/src/solana`](https://github.com/lsheva/konekt/blob/main/packages/integrations/src/solana). Copy them into your app. Do not add a `konekt/solana-client` wrapper.
 
+## Copy the bridge
+
+Copy these four files, keeping their relative layout, because they import each other:
+
+```
+src/
+  bridge/
+    bytes.ts          # base58 and base64 helpers
+    request.ts        # the RequestClient type
+    solana/
+      rpc.ts          # WalletConnect method encoding
+      web3.ts         # the @solana/web3.js wallet
+      kit.ts          # the @solana/kit wallet, if you use Kit
+```
+
+They import each other with explicit `.ts` extensions, which TypeScript accepts under `"allowImportingTsExtensions": true` (with `noEmit`) or `"rewriteRelativeImportExtensions": true`. Vite, Next.js, and other bundlers resolve them as written. Change the extensions to `.js` if your setup requires it.
+
 ## Install
 
 ```sh
-pnpm add konekt @solana/web3.js
+pnpm add konekt @scure/base @solana/web3.js
 ```
 
-For the Kit bridge, install `@solana/kit` instead of or as well as `@solana/web3.js`. You also need a WalletConnect project ID.
+`@scure/base` is what `bytes.ts` uses for base58 and base64. For the Kit bridge, add `@solana/kit` instead of or alongside `@solana/web3.js`. You also need a WalletConnect project ID.
+
+:::caution[`@solana/web3.js` v1 needs `Buffer` in the browser]
+The legacy `Transaction` path calls `Buffer.from()`. Vite apps generally need a polyfill such as `vite-plugin-node-polyfills`, or a `globalThis.Buffer` shim, before signing legacy transactions. Kit and `VersionedTransaction` do not need it.
+:::
 
 ## Create and connect the provider
 
@@ -29,8 +50,11 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: solana,
+  chains: [solana],
 });
+
+// Render this as a QR code. See the Wallet UI guide.
+const showPairingUri = (uri: string) => console.log(uri);
 
 provider.on("display_uri", showPairingUri);
 provider.on("request_sent", ({ url }) => {
@@ -40,7 +64,20 @@ provider.on("request_sent", ({ url }) => {
 if (!provider.connected) await provider.connect();
 ```
 
-Approved addresses are grouped by CAIP-2 ID on `provider.accountsByChain`. That list does not include public keys as bytes. Call `solana_getAccounts` when a client needs the wallet’s current pubkey objects.
+`chains` always takes an array, so a single Solana chain is `[solana]`, not `solana`.
+
+See [Wallet UI](../wallet-ui/) for rendering the pairing URI and cancelling an attempt, and [Getting started](../getting-started/) for the connection lifecycle.
+
+### Read the approved address
+
+Approved addresses are grouped by CAIP-2 ID on `provider.accountsByChain`. A wallet can approve a session without any Solana account, so check before you use one:
+
+```ts
+const [address] = provider.accountsByChain[solana.id] ?? [];
+if (!address) throw new Error("The wallet approved no Solana account");
+```
+
+That list holds base58 addresses, not public keys as bytes. When a client needs the wallet’s current pubkeys, call `solana_getAccounts` through the bridge’s `solanaPubkeys()` helper in `rpc.ts`.
 
 ## Wire encodings
 
@@ -59,48 +96,59 @@ If `solana_signTransaction` returns only a signature, apply it to the original t
 
 ## @solana/web3.js
 
-Copy [`web3.ts`](https://github.com/lsheva/konekt/blob/main/packages/integrations/src/solana/web3.ts) and [`rpc.ts`](https://github.com/lsheva/konekt/blob/main/packages/integrations/src/solana/rpc.ts):
+`konektWeb3Wallet()` from `web3.ts` exposes the wallet interface most Solana code expects:
 
 ```ts
-import { PublicKey, Connection, SystemProgram, Transaction } from "@solana/web3.js";
-import { konektWeb3Wallet } from "./solana/web3";
+import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { solana } from "konekt/solana";
+import { konektWeb3Wallet } from "./bridge/solana/web3.ts";
 
-const publicKey = new PublicKey(provider.accountsByChain[solana.id][0]);
+const rpcUrl = "https://api.mainnet-beta.solana.com";
+const connection = new Connection(rpcUrl);
+
+const publicKey = new PublicKey(address);
 const wallet = konektWeb3Wallet(provider, { publicKey, chainId: solana.id });
 
 const signature = await wallet.signMessage(new TextEncoder().encode("Sign in to My app"));
 
-const tx = new Transaction().add(
+const transaction = new Transaction().add(
   SystemProgram.transfer({ fromPubkey: publicKey, toPubkey: publicKey, lamports: 1 }),
 );
-tx.feePayer = publicKey;
-tx.recentBlockhash = (await new Connection(rpcUrl).getLatestBlockhash()).blockhash;
+transaction.feePayer = publicKey;
+transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-const signed = await wallet.signTransaction(tx);
-const versioned = await wallet.signTransaction(versionedTransaction);
+const signed = await wallet.signTransaction(transaction);
 ```
 
-`signTransaction` accepts both legacy `Transaction` and `VersionedTransaction`. `signAndSendTransaction` asks the wallet to broadcast.
+`signTransaction` accepts both legacy `Transaction` and `VersionedTransaction` and returns the same type it received. `signAndSendTransaction` asks the wallet to broadcast instead:
 
-Target another configured Solana chain without changing the active chain:
+```ts ignore
+const txSignature = await wallet.signAndSendTransaction(transaction, { skipPreflight: false });
+```
+
+Target another configured Solana chain without changing the active chain. Add it to `chains` first, or the request fails with `-32602`:
 
 ```ts
-import { solanaDevnet } from "konekt/solana";
+import { solana, solanaDevnet } from "konekt/solana";
 
+// chains: [solana, solanaDevnet]
 const devnetWallet = konektWeb3Wallet(provider, {
-  publicKey,
+  publicKey: new PublicKey(address),
   chainId: solanaDevnet.id,
 });
 ```
 
 ## @solana/kit
 
-Copy [`kit.ts`](https://github.com/lsheva/konekt/blob/main/packages/integrations/src/solana/kit.ts) as well. It encodes Kit `Transaction` objects, then decodes the wallet’s signed bytes:
+`kit.ts` encodes Kit `Transaction` objects, then decodes the wallet’s signed bytes:
 
 ```ts
-import { konektKitWallet } from "./solana/kit";
+import type { Transaction } from "@solana/kit";
+import { solana } from "konekt/solana";
+import { konektKitWallet } from "./bridge/solana/kit.ts";
 
-const address = provider.accountsByChain[solana.id][0];
+declare const transaction: Transaction;
+
 const wallet = konektKitWallet(provider, { address, chainId: solana.id });
 
 const signature = await wallet.signMessage(new TextEncoder().encode("Sign in to My app"));

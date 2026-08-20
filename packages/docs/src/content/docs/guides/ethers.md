@@ -50,6 +50,8 @@ if (!provider.connected) {
 }
 ```
 
+This snippet omits the pairing UI and cancellation for brevity. See [Wallet UI](../wallet-ui/) for rendering the URI, aborting an attempt, and separating a user cancellation from a real failure.
+
 ## Wrap the provider with ethers
 
 ```ts
@@ -88,9 +90,8 @@ The wallet approves and broadcasts the transaction. Gas estimation, nonce lookup
 Without a `read` transport, those reads fail with error `4200`. You can instead keep public reads on a separate `ethers.JsonRpcProvider(rpcUrl)` and use Konekt only for the signer:
 
 ```ts
-import { BrowserProvider, JsonRpcProvider } from "ethers";
+import { JsonRpcProvider } from "ethers";
 
-const signer = await new BrowserProvider(provider).getSigner();
 const reader = new JsonRpcProvider(rpcUrl);
 ```
 
@@ -102,11 +103,14 @@ Ethers clients do not own the WalletConnect session. Listen to the original Kone
 
 ```ts
 provider.on("accountsChanged", (accounts) => {
-  updateSelectedAccount(accounts[0]);
+  const [next] = accounts;
+  if (next) updateSelectedAccount(next);
+  else clearWalletState();
 });
 
 provider.on("chainChanged", (chainId) => {
-  updateSelectedChain(Number.parseInt(chainId, 16));
+  // Number() reads both "0x1" and the "1" some wallets send.
+  updateSelectedChain(Number(chainId));
 });
 
 provider.on("disconnect", () => {
@@ -123,18 +127,18 @@ To ask the wallet to switch networks, send `wallet_switchEthereumChain` through 
 Give each network its own Konekt read transport, then switch the wallet before using an ethers signer against another chain:
 
 ```ts
-const provider = await Provider.init({
-  projectId,
-  metadata,
-  chains: [
-    evm(1, { read: http(mainnetRpcUrl) }),
-    evm(8453, { read: http(baseRpcUrl) }),
-  ],
-});
+const mainnetRpcUrl = "https://ethereum.example-rpc.com";
+const baseRpcUrl = "https://base.example-rpc.com";
+
+// Pass this as the `chains` option of the Provider.init() call above.
+const chains = [
+  evm(1, { read: http(mainnetRpcUrl) }),
+  evm(8453, { read: http(baseRpcUrl) }),
+];
 
 await provider.request({
   method: "wallet_switchEthereumChain",
-  params: [{ chainId: "0x2105" }],
+  params: [{ chainId: "0x2105" }], // Base, decimal 8453
 });
 ```
 

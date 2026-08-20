@@ -51,8 +51,9 @@ import "konekt-ui/styles.css";
 - This package does not create the connector.
 - Prefer static registration in `createConfig()`. The connector can initialize `Provider` lazily,
   so registration itself does not need to open a relay socket.
-- If the config omits it initially, pass `getWalletConnect: () => Promise<Connector>` to register and
-  return it through an application-owned public mechanism. Do not use wagmi `_internal` APIs.
+- If the config omits it initially, pass `getWalletConnect: () => Promise<Connector>` to create and
+  return it on demand. wagmi 3 has no public API for this; `config._internal.connectors.setup()` is
+  the only way. Use it only when asked for on-demand registration, and say that it is private API.
 - Pass `onDismiss` when connector-owned pairing work also needs cancellation.
 - Use `useWagmiPairing` for a custom trigger with `WalletModal`.
 

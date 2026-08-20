@@ -5,7 +5,7 @@ description: Use a connected Konekt provider as a viem custom transport for wall
 
 Konekt implements the EIP-1193 request interface expected by viem’s `custom()` transport. This lets a viem wallet client sign messages and submit transactions through an approved WalletConnect session.
 
-This integration is for EVM networks. Use Konekt directly for Solana, Bitcoin, Cosmos, or a custom namespace.
+This integration is for EVM networks. Use Konekt directly, or the [Solana](../solana/) and [CosmJS](../cosmjs/) bridges, for other namespaces.
 
 ## Install
 
@@ -54,6 +54,8 @@ if (!provider.connected) {
 ```
 
 The `read` transport handles JSON-RPC reads sent through the provider. Wallet methods such as `personal_sign` and `eth_sendTransaction` still go to the connected wallet.
+
+This snippet omits the pairing UI and cancellation for brevity. See [Wallet UI](../wallet-ui/) for rendering the URI, aborting an attempt, and separating a user cancellation from a real failure.
 
 ## Create viem clients
 
@@ -129,49 +131,40 @@ The wallet approves and broadcasts the transaction. Receipt polling is a read an
 It is also valid—and common—to keep public reads outside Konekt:
 
 ```ts
-import {
-  createPublicClient,
-  createWalletClient,
-  custom,
-  http as viemHttp,
-} from "viem";
+import { createPublicClient, http as viemHttp } from "viem";
 import { mainnet } from "viem/chains";
 
-const walletClient = createWalletClient({
-  chain: mainnet,
-  transport: custom(provider),
-});
-
-const publicClient = createPublicClient({
+const httpPublicClient = createPublicClient({
   chain: mainnet,
   transport: viemHttp(rpcUrl),
 });
 ```
 
-With this arrangement:
+Keep the same `walletClient` as above and use this client in place of the earlier `publicClient`. With this arrangement:
 
 - `walletClient` uses WalletConnect through Konekt;
-- `publicClient` reads directly through viem;
-- the Konekt chain does not need `read` unless other code sends reads through `provider.request()`.
+- `httpPublicClient` reads directly through viem;
+- the Konekt chain does not need `read` unless other code sends reads through `provider.request()`, so you can drop `konektHttp` from `evm()` entirely.
 
 Alias the two `http` imports when you use both `konekt/http` and viem’s `http()` in one module.
 
 ## Multiple EVM networks
 
-Give each network its own Konekt read transport:
+Give each network its own Konekt read transport, and pass the result as the `chains` option of the `Provider.init()` call above:
 
 ```ts
 import { base, mainnet } from "viem/chains";
 
-const provider = await Provider.init({
-  projectId,
-  metadata,
-  chains: [
-    evm(mainnet.id, { read: konektHttp(mainnetRpcUrl) }),
-    evm(base.id, { read: konektHttp(baseRpcUrl) }),
-  ],
-});
+const mainnetRpcUrl = "https://ethereum.example-rpc.com";
+const baseRpcUrl = "https://base.example-rpc.com";
+
+const chains = [
+  evm(mainnet.id, { read: konektHttp(mainnetRpcUrl) }),
+  evm(base.id, { read: konektHttp(baseRpcUrl) }),
+];
 ```
+
+A chain without its own `read` cannot serve JSON-RPC reads, so configure one per network you read from.
 
 The standard `custom(provider)` transport uses the provider’s active EVM chain. Switch the wallet before using a viem client configured for another chain:
 
@@ -189,8 +182,10 @@ A viem client’s `chain` option describes the network but does not switch the K
 For a read-only client that must always target one configured network without changing the active chain, wrap Konekt’s per-request target:
 
 ```ts
+import type { RequestArguments } from "konekt";
+
 const baseTransport = custom({
-  request: (args) => provider.request(args, `eip155:${base.id}`),
+  request: (args: RequestArguments) => provider.request(args, `eip155:${base.id}`),
 });
 
 const basePublicClient = createPublicClient({
@@ -205,11 +200,14 @@ Viem clients do not subscribe to provider state automatically. Listen to provide
 
 ```ts
 provider.on("accountsChanged", (accounts) => {
-  updateSelectedAccount(accounts[0]);
+  const [next] = accounts;
+  if (next) updateSelectedAccount(next);
+  else clearWalletState();
 });
 
 provider.on("chainChanged", (chainId) => {
-  updateSelectedChain(Number.parseInt(chainId, 16));
+  // Number() reads both "0x1" and the "1" some wallets send.
+  updateSelectedChain(Number(chainId));
 });
 
 provider.on("disconnect", () => {

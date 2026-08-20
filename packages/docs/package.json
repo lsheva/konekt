@@ -4,11 +4,14 @@
   "type": "module",
   "scripts": {
     "sync:skills": "node scripts/sync-skills.mjs",
+    "sync:sizes": "node scripts/sync-sizes.mjs",
+    "sync": "pnpm sync:skills && pnpm sync:sizes",
     "check:links": "node scripts/check-links.mjs",
-    "dev": "pnpm sync:skills && pnpm check:links && astro dev",
-    "build": "pnpm sync:skills && pnpm check:links && astro build",
+    "check:snippets": "node scripts/check-snippets.mjs",
+    "dev": "pnpm sync && pnpm check:links && astro dev",
+    "build": "pnpm sync && pnpm check:links && astro build",
     "preview": "astro preview",
-    "typecheck": "pnpm sync:skills && pnpm check:links && astro check"
+    "typecheck": "pnpm sync && pnpm check:links && pnpm check:snippets && astro check"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.7",

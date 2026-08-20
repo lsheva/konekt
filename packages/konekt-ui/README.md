@@ -1,6 +1,9 @@
 # konekt-ui
 
-Connect UI for `konekt`. Two entry points:
+[![npm](https://img.shields.io/npm/v/konekt-ui)](https://www.npmjs.com/package/konekt-ui)
+[![license](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
+
+Connect UI for [`konekt`](https://www.npmjs.com/package/konekt). Two entry points:
 
 - `konekt-ui` — `WalletModal`, `useProviderPairing`, `Modal`, `QrCode`, the explorer client. Any namespace, no wagmi.
 - `konekt-ui/wagmi` — `ConnectButton`, `AccountModal`, `useWagmiPairing`. EVM, through a wagmi config.
@@ -8,8 +11,18 @@ Connect UI for `konekt`. Two entry points:
 The theme is a plain stylesheet: `import "konekt-ui/styles.css"`.
 
 ```sh
-pnpm add konekt-ui react
+pnpm add konekt konekt-ui react
 ```
+
+The wagmi entry point additionally requires `viem` and `wagmi`:
+
+```sh
+pnpm add viem wagmi
+```
+
+Peer ranges are React 19 or newer, wagmi 3, and viem 2.
+
+Full guide: [lsheva.github.io/konekt/guides/konekt-ui](https://lsheva.github.io/konekt/guides/konekt-ui/)
 
 ## Any provider
 
@@ -43,9 +56,12 @@ import "konekt-ui/styles.css";
 
 ```tsx
 <WalletModal
+  open={open}
+  projectId={projectId}
+  pairing={pairing}
+  onClose={() => setOpen(false)}
   chains={["eip155:1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"]}
   wallets={{ exclude: [ledgerId], featured: [phantomId, metaMaskId] }}
-  …
 />
 ```
 
