@@ -22,7 +22,7 @@ These are production bundle measurements from the repository’s `pnpm size` che
 
 The check bundles the listed exports and their runtime dependencies with esbuild, minifies the result, and reports gzip transfer size. The UI rows include the QR encoder but exclude peer dependencies such as React, viem, and wagmi; those libraries may already be shared by the application. Each row is measured independently, so do not add the rows to predict an application bundle—your bundler can share and deduplicate modules.
 
-Exact output varies with dependency and bundler versions. The committed lockfile and [size configuration](https://github.com/lsheva/konekt/blob/master/.size-limit.mjs) make the repository result reproducible and enforce limits:
+Exact output varies with dependency and bundler versions. The committed lockfile and [size configuration](https://github.com/lsheva/konekt/blob/main/.size-limit.mts) make the repository result reproducible and enforce limits:
 
 ```sh
 pnpm size

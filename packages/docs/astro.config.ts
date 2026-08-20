@@ -33,7 +33,7 @@ export default defineConfig({
       title: "konekt",
       description: "Connect browser apps to WalletConnect wallets with a small, modular provider.",
       editLink: {
-        baseUrl: "https://github.com/lsheva/konekt/edit/master/packages/docs/",
+        baseUrl: "https://github.com/lsheva/konekt/edit/main/packages/docs/",
       },
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/lsheva/konekt" }],
       sidebar: [

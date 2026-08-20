@@ -25,7 +25,7 @@ You also need a WalletConnect project ID.
 
 Konekt does not ship a wagmi-specific connector. Keeping the adapter in the application lets it follow the app’s wagmi version and connection policy without adding wagmi to Konekt’s core.
 
-Copy the repository’s tested [Konekt connector implementation](https://github.com/lsheva/konekt/blob/master/packages/example/src/konekt.ts) into your application, for example as `src/konekt.ts`. It exports `konekt(options)` for wagmi configuration and `abortPairing()` for cancelling the current proposal.
+Copy the repository’s tested [Konekt connector implementation](https://github.com/lsheva/konekt/blob/main/packages/example/src/konekt.ts) into your application, for example as `src/konekt.ts`. It exports `konekt(options)` for wagmi configuration and `abortPairing()` for cancelling the current proposal.
 
 The connector:
 
