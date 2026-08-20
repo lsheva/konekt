@@ -69,6 +69,26 @@ the EVM chain has `read`, or use viem's `http()` directly. For multiple chains, 
 uses the active EVM chain; a fixed read transport can call
 `provider.request(args, "eip155:<id>")`.
 
+## ethers
+
+```ts
+const ethersProvider = new BrowserProvider(provider);
+const signer = await ethersProvider.getSigner();
+```
+
+Connect Konekt before `getSigner()`. Configure `evm(id, { read: http(url) })` when ethers will send
+JSON-RPC reads through the provider. Listen for `accountsChanged`, `chainChanged`, and `disconnect`
+on the Konekt provider.
+
+## Solana and CosmJS
+
+Do not add `konekt/solana-client` or `konekt/cosmjs`. Copy the application-owned bridges from
+https://github.com/lsheva/konekt/tree/main/packages/integrations/src.
+
+- Solana messages are base58; transactions are base64. Support legacy and versioned transactions.
+- CosmJS Amino and direct signers must be separate objects. Direct `accountNumber` is a decimal
+  string on the wire; `bodyBytes` / `authInfoBytes` are base64. Call `cosmos_getAccounts` for pubkey.
+
 ## Bundle discipline
 
 - Preserve subpath imports. Do not create a barrel that re-exports every adapter and feature.

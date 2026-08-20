@@ -7,7 +7,7 @@
     "dev:docs": "pnpm --filter docs dev",
     "docs:build": "pnpm --filter docs build",
     "build": "pnpm --filter konekt build && pnpm --filter konekt-ui build",
-    "test": "pnpm --filter konekt test && pnpm --filter konekt-ui test",
+    "test": "pnpm --filter konekt test && pnpm --filter konekt-ui test && pnpm --filter integrations test",
     "typecheck": "pnpm build && pnpm -r typecheck",
     "size": "pnpm build && pnpm size:built",
     "size:built": "node scripts/size-report.mjs",

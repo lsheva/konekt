@@ -57,9 +57,12 @@ await provider.connect();
 ## Integrations
 
 - viem: pass the connected EVM provider to `custom(provider)`. Wallet clients use Konekt; public clients either use the same custom transport with an EVM `read` transport or viem’s own `http()`.
+- ethers v6: pass the connected EVM provider to `new BrowserProvider(provider)`. Configure `konekt/http` when ethers will send JSON-RPC reads through that provider. Keep account and chain listeners on the Konekt provider.
 - wagmi 3: use an application-owned connector around the Konekt provider. Register it in `createConfig()` and let its `getProvider` initialize Konekt lazily. Wagmi HTTP transports handle reads.
+- Solana: copy the application-owned web3.js or Kit bridges. Encode messages as base58 and transactions as base64. Do not add `konekt/solana-client`.
+- CosmJS: copy separate Amino and direct `OfflineSigner` factories. Convert direct `Uint8Array` fields to base64 and `accountNumber` to a decimal string. Call `cosmos_getAccounts` for `algo` and `pubkey`. Do not add `konekt/cosmjs`.
 - Do not use wagmi private `_internal` APIs for connector registration.
-- Read the [viem](../guides/viem/) or [wagmi](../guides/wagmi/) guide before generating integration code.
+- Read the matching [viem](../guides/viem/), [ethers](../guides/ethers/), [wagmi](../guides/wagmi/), [Solana](../guides/solana/), or [CosmJS](../guides/cosmjs/) guide before generating integration code.
 
 ## Bundle discipline
 

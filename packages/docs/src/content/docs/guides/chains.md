@@ -156,3 +156,5 @@ provider.on("message", ({ type, data }) => {
 ```
 
 Import adapters from their subpaths rather than from `konekt`. This keeps the core package independent of chain-specific code and lets your bundler omit adapters you do not use.
+
+Client libraries such as [viem](../viem/), [ethers](../ethers/), [Solana web3.js and Kit](../solana/), and [CosmJS](../cosmjs/) sit on top of these adapters. They are not extra Konekt packages.
