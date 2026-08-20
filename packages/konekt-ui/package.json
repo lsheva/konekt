@@ -18,7 +18,12 @@
     "react",
     "wallet",
     "modal",
-    "wagmi"
+    "wagmi",
+    "qr",
+    "connect-button",
+    "web3",
+    "dapp",
+    "konekt"
   ],
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -50,6 +55,7 @@
   "files": [
     "dist",
     "src",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md",
     "SKILL.md"

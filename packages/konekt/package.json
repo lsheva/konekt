@@ -19,7 +19,13 @@
     "solana",
     "bitcoin",
     "cosmos",
-    "provider"
+    "provider",
+    "eip1193",
+    "web3",
+    "dapp",
+    "caip",
+    "siwe",
+    "wallet"
   ],
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -97,6 +103,7 @@
   "files": [
     "dist",
     "src",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md",
     "SKILL.md"

@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a change to the public API or a new capability.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Konekt keeps a deliberately small surface. Chain adapters, features, and UI are separate entry points, and the kernel does not import them. Proposals that add bytes to the core path need a strong case.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Konekt makes hard today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: What you would write as a consumer.
+      render: ts
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Application-owned code, an existing entry point, or another library.
