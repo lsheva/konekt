@@ -29,7 +29,7 @@ pnpm add konekt
 
 You can use `npm install konekt` or `yarn add konekt` instead.
 
-The provider and EVM adapter are 27.49 kB minified and gzipped with their runtime dependencies. Optional transports, features, chain adapters, and UI use separate entry points. See [Bundle size and loading](../bundle-size/) for the complete measurements and an on-demand initialization pattern.
+The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted WalletConnect message—about 90% smaller than the main bundle of `@walletconnect/ethereum-provider@2.23.10`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
 
 ## 1. Create the provider
 

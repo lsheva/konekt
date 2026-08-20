@@ -35,6 +35,24 @@ Exact output varies with dependency and bundler versions. The committed lockfile
 pnpm size
 ```
 
+## Compared with Reown
+
+Konekt is materially smaller because it is a focused WalletConnect client, uses native browser cryptography first, and does not depend on the `@walletconnect` SDK package graph.
+
+| Connection path | Minified + gzip |
+| --- | ---: |
+| Konekt headless EVM, through first encrypted message | **14.53 kB** |
+| `@walletconnect/ethereum-provider@2.23.10` main bundle | **142.97 kB** |
+| `konekt-ui` wallet modal + styles | **12.40 kB** |
+| Konekt provider + React wallet modal + styles | **26.93 kB** |
+| `@reown/appkit@1.8.19` main bundle | **253.77 kB** |
+
+The headless comparison makes Konekt about **90% smaller** than the official Ethereum Provider’s main bundle. The focused `konekt-ui` layer is about **95% smaller** than AppKit; even the complete Konekt provider and UI stack is about **89% smaller**. AppKit is a broader product with embedded login, smart accounts, swaps, on-ramp, payments, and other features; Konekt is better suited to apps that already own those product decisions and want the connection layer to stay small.
+
+The Reown figures are Bundlephobia results for the exact published versions: [`@walletconnect/ethereum-provider@2.23.10`](https://bundlephobia.com/package/@walletconnect/ethereum-provider@2.23.10) and [`@reown/appkit@1.8.19`](https://bundlephobia.com/package/@reown/appkit@1.8.19). Bundlephobia reports the main bundle separately from dynamic assets. The Konekt headless figure includes its lazy cipher chunk, making it the transfer through the first encrypted protocol message rather than only the initial entry.
+
+See [Why Konekt is better](../why-konekt/) for the architectural comparison and [Konekt UI](../konekt-ui/#konekt-ui-vs-reown-appkit) for the direct UI feature comparison.
+
 ## Let tree-shaking work
 
 The `konekt` package declares that its modules have no top-level side effects. `konekt-ui` marks only its CSS as side-effectful. A production ESM bundler can therefore remove exports and modules that are not reachable from your application.

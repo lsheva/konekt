@@ -5,6 +5,10 @@ description: Add an accessible React wallet picker, pairing QR, and optional wag
 
 `konekt-ui` is an optional React interface for Konekt. It can list compatible wallets, show the pairing QR, open wallet links, and report connection errors.
 
+:::tip[About 95% smaller than AppKit]
+The Konekt wallet modal and stylesheet are **12.40 kB** minified and gzipped. The `@reown/appkit@1.8.19` main bundle is **253.77 kB**—Konekt’s focused UI layer is about **95% smaller**.
+:::
+
 Choose an entry point:
 
 | Import | Use it when |
@@ -13,6 +17,31 @@ Choose an entry point:
 | `konekt-ui/wagmi` | Your EVM app already manages connectors and account state with wagmi. |
 
 The components require React 19 or newer. The wagmi entry point also requires wagmi 3 and viem 2.
+
+## Konekt UI vs Reown AppKit
+
+Konekt UI is better when the app needs a wallet picker, pairing QR, and account controls without adopting a full onboarding platform.
+
+| UI path | JavaScript | CSS | Minified + gzip total |
+| --- | ---: | ---: | ---: |
+| Konekt `WalletModal` + `useProviderPairing` | 9.55 kB | 2.85 kB | **12.40 kB** |
+| Konekt wagmi `ConnectButton` | 11.02 kB | 2.85 kB | **13.87 kB** |
+| `@reown/appkit@1.8.19` main bundle | 253.77 kB | Included in bundle result | **253.77 kB** |
+
+The Konekt rows include the QR encoder and exclude peer dependencies such as React, viem, and wagmi. The AppKit figure is the [Bundlephobia result for the published package](https://bundlephobia.com/package/@reown/appkit@1.8.19), including its bundled runtime dependencies.
+
+| Capability | Konekt UI | Reown AppKit |
+| --- | --- | --- |
+| Wallet picker and pairing QR | Yes | Yes |
+| Mobile wallet links | Yes | Yes |
+| Light, dark, and system themes | Yes | Yes |
+| App-owned styling and unstyled mode | Yes | Theming APIs |
+| Optional wagmi account, network, and disconnect controls | Yes | Yes |
+| Embedded email and social wallets | No | Yes |
+| Smart accounts | No | Yes |
+| Built-in swaps and on-ramp | No | Yes |
+
+That narrower scope is the advantage for apps that already own authentication, transactions, RPC access, and visual design. Konekt UI does not make those applications download or configure unrelated product features. AppKit is the better fit only when the app wants its broader onboarding and transaction suite.
 
 ## Install
 
