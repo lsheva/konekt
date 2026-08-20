@@ -13,6 +13,7 @@ import type { EvmExt } from "konekt/eip155";
 import { cacaosOf } from "konekt/siwe";
 import { useBalance, useChains, usePublicClient } from "wagmi";
 import { useProviderPairing, WalletModal } from "konekt-ui";
+import konektLogo from "../../../konekt-logo.svg";
 import { evmAddresses, firstAddress } from "./accounts";
 import { debugBus } from "./debugBus";
 import { ethSignHash, explorers, formatError, mailTypedData, pretty, utf8Hex } from "./format";
@@ -230,13 +231,16 @@ export const Showcase: React.FC = () => {
   return (
     <div className="shell">
       <header className="hero">
-        <div>
-          <div className="badge">EIP-1193 · Solana · Bitcoin · WalletConnect v2</div>
-          <h1>konekt showcase</h1>
-          <p>
-            Pair one namespace at a time. EVM wallets drop Bitcoin; injected Xverse/Leather/UniSat
-            sessions are not WalletConnect QR.
-          </p>
+        <div className="hero-brand">
+          <img className="hero-mark" src={konektLogo} alt="" />
+          <div>
+            <div className="badge">EIP-1193 · Solana · Bitcoin · WalletConnect v2</div>
+            <h1>konekt showcase</h1>
+            <p>
+              Pair one namespace at a time. EVM wallets drop Bitcoin; injected Xverse/Leather/UniSat
+              sessions are not WalletConnect QR.
+            </p>
+          </div>
         </div>
         <div className="status">
           {restoring && "Restoring session…"}

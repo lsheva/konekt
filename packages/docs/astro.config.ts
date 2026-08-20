@@ -32,6 +32,10 @@ export default defineConfig({
     starlight({
       title: "konekt",
       description: "Connect browser apps to WalletConnect wallets with a small, modular provider.",
+      logo: {
+        src: "./src/assets/konekt-framed.svg",
+        alt: "Konekt",
+      },
       editLink: {
         baseUrl: "https://github.com/lsheva/konekt/edit/main/packages/docs/",
       },

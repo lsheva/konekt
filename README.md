@@ -1,4 +1,8 @@
-# konekt
+<p align="center">
+  <img src="./konekt-framed.svg" alt="Konekt" width="128">
+</p>
+
+<h1 align="center">konekt</h1>
 
 [![npm](https://img.shields.io/npm/v/konekt?label=konekt)](https://www.npmjs.com/package/konekt)
 [![npm](https://img.shields.io/npm/v/konekt-ui?label=konekt-ui)](https://www.npmjs.com/package/konekt-ui)
