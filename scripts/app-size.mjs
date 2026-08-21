@@ -9,6 +9,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const reportUrl = new URL("../app-size-report.json", import.meta.url);
 const commentUrl = new URL("../.app-size-comment.md", import.meta.url);
 const update = process.argv.includes("--update");
+const syncVersions = process.argv.includes("--sync-versions");
 
 const apps = [
   {
@@ -188,6 +189,23 @@ function markdown(current) {
   }
 
   return `${lines.join("\n")}\n`;
+}
+
+if (syncVersions) {
+  const committed = await readCommittedReport();
+  if (!committed) process.exit(0);
+  for (const app of committed.apps) {
+    for (const name of Object.keys(app.versions ?? {})) {
+      try {
+        const pkg = JSON.parse(await readFile(join(root, "packages", name, "package.json"), "utf8"));
+        app.versions[name] = pkg.version;
+      } catch {
+        continue;
+      }
+    }
+  }
+  await writeFile(reportUrl, `${JSON.stringify(committed, null, 2)}\n`);
+  process.exit(0);
 }
 
 for (const app of apps) {
