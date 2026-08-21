@@ -10,6 +10,9 @@ const isUserSite = repo === `${owner}.github.io`;
 const base = pages && !isUserSite ? `/${repo}` : "/";
 const site = pages ? `https://${owner}.github.io` : "http://localhost:4321";
 const origin = `${site}${base === "/" ? "" : base}`;
+// The Pages workflow copies the showcase build into the docs artifact under /showcase/.
+// Locally it is the showcase dev server instead.
+const showcase = pages ? `${origin}/showcase/` : "http://localhost:5174";
 
 const barrels = [
   "../konekt/src/index.ts",
@@ -69,6 +72,7 @@ export default defineConfig({
             { label: "Migrating from Ethereum Provider", slug: "guides/migrate-ethereum-provider" },
           ],
         },
+        { label: "Showcase", link: showcase },
         {
           label: "For agents",
           items: [{ label: "System prompt", slug: "ai" }],

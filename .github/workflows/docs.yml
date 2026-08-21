@@ -1,4 +1,4 @@
-name: Deploy docs
+name: Deploy site
 
 on:
   push:
@@ -25,7 +25,15 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install
+      - run: pnpm build
       - run: pnpm --filter docs build
+      # The showcase is a client bundle, so the project id is public by design; keep it in a
+      # repository variable, not a secret.
+      - run: pnpm --filter showcase build
+        env:
+          WC_PROJECT_ID: ${{ vars.WC_PROJECT_ID }}
+      # One Pages site per repository: the showcase rides along inside the docs artifact.
+      - run: cp -R packages/showcase/dist packages/docs/dist/showcase
       - uses: actions/upload-pages-artifact@v5
         with:
           path: packages/docs/dist

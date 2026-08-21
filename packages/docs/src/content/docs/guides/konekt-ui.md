@@ -5,6 +5,10 @@ description: Add an accessible React wallet picker, pairing QR, and optional wag
 
 `konekt-ui` is an optional React interface for Konekt. It can list compatible wallets, show the pairing QR, open wallet links, and report connection errors.
 
+:::tip[Try it live]
+The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Provider` through `WalletModal` and `useProviderPairing`, then exercises every method the session settles.
+:::
+
 :::tip[About 95% smaller than AppKit]
 The Konekt wallet modal and stylesheet are **12.40 kB** minified and gzipped. The `@reown/appkit@1.8.19` main bundle is **253.77 kB**—Konekt’s focused UI layer is about **95% smaller**.
 :::

@@ -1,6 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// Same Pages layout as packages/docs: the workflow copies this build into the docs site under
+// /showcase/, so assets must resolve under the repo base path.
+const pages = process.env.GITHUB_ACTIONS === "true";
+const owner = process.env.GITHUB_REPOSITORY_OWNER ?? "localhost";
+const repo = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "konekt";
+const isUserSite = repo === `${owner}.github.io`;
+const base = pages ? (isUserSite ? "/showcase/" : `/${repo}/showcase/`) : "/";
+
 const UNINFORMATIVE = new Set([
   "_esm",
   "browser",
@@ -51,6 +59,7 @@ function dominantPackage(moduleIds: readonly string[]): string | undefined {
 }
 
 export default defineConfig({
+  base,
   plugins: [react()],
   // One .env at the workspace root, shared with the test suite. The prefix list names the variable
   // outright rather than opening all of WC_*, so a future secret there does not reach the bundle.
