@@ -1,3 +1,4 @@
+import { http } from "../http.ts";
 import {
   type Chain,
   type ChainAdapter,
@@ -102,7 +103,7 @@ export type EvmExt = {
   accounts: string[];
 };
 
-/** Optional behavior shared by every chain returned from one {@link evm} call. */
+/** Optional behavior for the chain returned from {@link evm}. */
 export type EvmOpts = {
   /**
    * JSON-RPC transport for `eth_*`, `net_*`, and `web3_*` reads after wallet methods are routed.
@@ -113,6 +114,20 @@ export type EvmOpts = {
 
 /** An EVM chain that adds {@link EvmExt} properties to its provider. */
 export type EvmChain = Chain<EvmExt>;
+
+/**
+ * The subset of a viem, wagmi, or AppKit chain definition that {@link evm} reads.
+ *
+ * Satisfied structurally by `viem/chains` entries, wagmi's `config.chains`, and AppKit EVM
+ * networks, so those objects can be passed straight to `evm()` without a konekt dependency on
+ * the package they came from.
+ */
+export type ChainDefinition = {
+  /** Decimal EVM chain ID. */
+  id: number;
+  /** RPC endpoints. The first default HTTP URL becomes the chain's read transport. */
+  rpcUrls?: { default?: { http?: readonly string[] | undefined } | undefined } | undefined;
+};
 
 function chainIdOf(ctx: Ctx): number {
   const active = ctx.activeChainId("eip155");
@@ -210,17 +225,28 @@ export const evmAdapter: ChainAdapter<EvmExt> = {
   onEvent,
 };
 
+function chain(id: number, read?: EvmOpts["read"]): EvmChain {
+  return { namespace: "eip155", id: `eip155:${id}`, adapter: evmAdapter, read };
+}
+
+function readOf(def: ChainDefinition): EvmOpts["read"] {
+  const url = def.rpcUrls?.default?.http?.[0];
+  return url ? http(url) : undefined;
+}
+
 /**
- * Creates EVM `Chain` objects for {@link Provider} configuration.
+ * Creates one EVM `Chain` for {@link Provider} configuration.
  *
- * Pass one or more decimal chain IDs and, optionally, an {@link EvmOpts} object last. The same
- * options apply to every returned chain. Use separate calls when networks need different RPC URLs.
+ * Pass a decimal chain ID or a chain definition from viem, wagmi, or AppKit (see
+ * {@link ChainDefinition}). A definition's first default HTTP RPC URL becomes the chain's read
+ * transport; an explicit `read` in the options overrides it. Bare IDs never get an implicit
+ * transport. Each call creates one chain, so two networks with different RPC URLs are two calls.
  *
  * Do not pass bare numbers to `Provider`'s `chains` option.
  *
  * @example One network without JSON-RPC reads
  * ```ts
- * chains: evm(1)
+ * chains: [evm(1)]
  * ```
  *
  * @example Two networks with different read transports
@@ -231,20 +257,39 @@ export const evmAdapter: ChainAdapter<EvmExt> = {
  * ]
  * ```
  *
- * @throws When no numeric chain ID is provided.
+ * @example viem or wagmi definitions, reads served by each chain's public RPC
+ * ```ts
+ * import { mainnet, base } from "viem/chains";
+ *
+ * chains: [evm(mainnet), evm(base)]
+ * ```
  */
-export function evm(...args: Array<number | EvmOpts>): EvmChain[] {
-  const ids: number[] = [];
-  let opts: EvmOpts = {};
-  for (const arg of args) {
-    if (typeof arg === "number") ids.push(arg);
-    else opts = arg;
-  }
-  if (!ids.length) throw new Error("UNSUPPORTED_CHAINS");
-  return ids.map((id) => ({
-    namespace: "eip155",
-    id: `eip155:${id}`,
-    adapter: evmAdapter,
-    read: opts.read,
-  }));
+export function evm(id: number | ChainDefinition, opts?: EvmOpts): EvmChain {
+  if (typeof id === "number") return chain(id, opts?.read);
+  return chain(id.id, opts?.read ?? readOf(id));
 }
+
+/** Ethereum mainnet (`eip155:1`). No read transport; use {@link evm} with a definition or `read` for JSON-RPC reads. */
+export const ethereumMainnet = chain(1);
+/** Ethereum Sepolia testnet (`eip155:11155111`). */
+export const ethereumSepolia = chain(11155111);
+/** Base mainnet (`eip155:8453`). */
+export const baseMainnet = chain(8453);
+/** Base Sepolia testnet (`eip155:84532`). */
+export const baseSepolia = chain(84532);
+/** BNB Smart Chain mainnet (`eip155:56`). */
+export const bscMainnet = chain(56);
+/** BNB Smart Chain testnet (`eip155:97`). */
+export const bscTestnet = chain(97);
+/** Arbitrum One mainnet (`eip155:42161`). */
+export const arbitrumMainnet = chain(42161);
+/** Arbitrum Sepolia testnet (`eip155:421614`). */
+export const arbitrumSepolia = chain(421614);
+/** OP Mainnet (`eip155:10`). */
+export const optimismMainnet = chain(10);
+/** OP Sepolia testnet (`eip155:11155420`). */
+export const optimismSepolia = chain(11155420);
+/** Polygon mainnet (`eip155:137`). */
+export const polygonMainnet = chain(137);
+/** Polygon Amoy testnet (`eip155:80002`). */
+export const polygonAmoy = chain(80002);

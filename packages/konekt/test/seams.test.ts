@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { bitcoin } from "../src/chains/bip122.ts";
+import { bitcoinMainnet } from "../src/chains/bip122.ts";
 import { evm } from "../src/chains/eip155.ts";
-import { solana } from "../src/chains/solana.ts";
+import { solanaMainnet } from "../src/chains/solana.ts";
 import { Provider, ProviderRpcError, RpcErrorCode } from "../src/index.ts";
 import type { Chain, ChainAdapter, Feature } from "../src/kernel/plugin.ts";
 import type { Session } from "../src/kernel/types.ts";
@@ -75,7 +75,7 @@ test("stub adapter receives its namespace and not eip155 methods", async () => {
 test("requests route by namespace when both adapters are present", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(
-    { projectId: "x", metadata, chains: [...evm(1), stub()] },
+    { projectId: "x", metadata, chains: [evm(1), stub()] },
     {
       session: fakeSession(
         async (req) => {
@@ -99,7 +99,7 @@ test("requests route by namespace when both adapters are present", async () => {
 test("eip155 and solana route in the same session", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(
-    { projectId: "x", metadata, chains: [...evm(1), solana] },
+    { projectId: "x", metadata, chains: [evm(1), solanaMainnet] },
     {
       session: fakeSession(
         async (req) => {
@@ -108,7 +108,7 @@ test("eip155 and solana route in the same session", async () => {
         },
         {
           eip155: { accounts: ["eip155:1:0xabc"], methods: ["personal_sign"], events: [] },
-          solana: { accounts: [`${solana.id}:So111`], methods: [...solana.adapter.methods], events: [] },
+          solana: { accounts: [`${solanaMainnet.id}:So111`], methods: [...solanaMainnet.adapter.methods], events: [] },
         },
       ),
     },
@@ -116,13 +116,13 @@ test("eip155 and solana route in the same session", async () => {
 
   await provider.request({ method: "personal_sign", params: ["0x", "0xabc"] });
   await provider.request({ method: "solana_signMessage", params: { message: "x", pubkey: "So111" } });
-  assert.deepEqual(calls, ["eip155:1:personal_sign", `${solana.id}:solana_signMessage`]);
+  assert.deepEqual(calls, ["eip155:1:personal_sign", `${solanaMainnet.id}:solana_signMessage`]);
 });
 
 test("solana and bip122 methods forward on their CAIP-2 ids", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(
-    { projectId: "x", metadata, chains: [solana, bitcoin] },
+    { projectId: "x", metadata, chains: [solanaMainnet, bitcoinMainnet] },
     {
       session: fakeSession(
         async (req) => {
@@ -130,8 +130,8 @@ test("solana and bip122 methods forward on their CAIP-2 ids", async () => {
           return "ok";
         },
         {
-          solana: { accounts: [`${solana.id}:So111`], methods: [...solana.adapter.methods], events: [] },
-          bip122: { accounts: [`${bitcoin.id}:bc1q`], methods: [...bitcoin.adapter.methods], events: [] },
+          solana: { accounts: [`${solanaMainnet.id}:So111`], methods: [...solanaMainnet.adapter.methods], events: [] },
+          bip122: { accounts: [`${bitcoinMainnet.id}:bc1q`], methods: [...bitcoinMainnet.adapter.methods], events: [] },
         },
       ),
     },
@@ -146,13 +146,13 @@ test("solana and bip122 methods forward on their CAIP-2 ids", async () => {
     () => provider.request({ method: "personal_sign" }),
     (e: unknown) => e instanceof ProviderRpcError && e.code === RpcErrorCode.unsupportedMethod,
   );
-  assert.deepEqual(calls, [`${solana.id}:solana_signMessage`, `${bitcoin.id}:sendTransfer`]);
+  assert.deepEqual(calls, [`${solanaMainnet.id}:solana_signMessage`, `${bitcoinMainnet.id}:sendTransfer`]);
 });
 
 test("switching chains moves both provider.chainId and where requests go", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(
-    { projectId: "x", metadata, chains: evm(1, 8453) },
+    { projectId: "x", metadata, chains: [evm(1), evm(8453)] },
     {
       session: fakeSession(
         async (req) => {
@@ -182,7 +182,7 @@ test("switching chains moves both provider.chainId and where requests go", async
 test("an explicit chainId reaches an approved chain without moving the active one", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(
-    { projectId: "x", metadata, chains: evm(1, 8453) },
+    { projectId: "x", metadata, chains: [evm(1), evm(8453)] },
     {
       session: fakeSession(
         async (req) => {
@@ -226,7 +226,7 @@ async function _stubHasNoChainId() {
 }
 
 async function _evmHasChainId() {
-  const provider = await Provider.create({ projectId: "x", metadata, chains: evm(1) });
+  const provider = await Provider.create({ projectId: "x", metadata, chains: [evm(1)] });
   provider.chainId;
   provider.accounts;
 }

@@ -40,7 +40,7 @@ The legacy `Transaction` path calls `Buffer.from()`. Vite apps generally need a 
 
 ```ts
 import { Provider } from "konekt";
-import { solana } from "konekt/solana";
+import { solanaMainnet } from "konekt/solana";
 
 const provider = await Provider.init({
   projectId: "YOUR_PROJECT_ID",
@@ -50,7 +50,7 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: [solana],
+  chains: [solanaMainnet],
 });
 
 // Render this as a QR code. See the Wallet UI guide.
@@ -64,7 +64,7 @@ provider.on("request_sent", ({ url }) => {
 if (!provider.connected) await provider.connect();
 ```
 
-`chains` always takes an array, so a single Solana chain is `[solana]`, not `solana`.
+`chains` always takes an array, so a single Solana chain is `[solanaMainnet]`, not `solanaMainnet`.
 
 See [Wallet UI](../wallet-ui/) for rendering the pairing URI and cancelling an attempt, and [Getting started](../getting-started/) for the connection lifecycle.
 
@@ -73,7 +73,7 @@ See [Wallet UI](../wallet-ui/) for rendering the pairing URI and cancelling an a
 Approved addresses are grouped by CAIP-2 ID on `provider.accountsByChain`. A wallet can approve a session without any Solana account, so check before you use one:
 
 ```ts
-const [address] = provider.accountsByChain[solana.id] ?? [];
+const [address] = provider.accountsByChain[solanaMainnet.id] ?? [];
 if (!address) throw new Error("The wallet approved no Solana account");
 ```
 
@@ -100,14 +100,14 @@ If `solana_signTransaction` returns only a signature, apply it to the original t
 
 ```ts
 import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { solana } from "konekt/solana";
+import { solanaMainnet } from "konekt/solana";
 import { konektWeb3Wallet } from "./bridge/solana/web3.ts";
 
 const rpcUrl = "https://api.mainnet-beta.solana.com";
 const connection = new Connection(rpcUrl);
 
 const publicKey = new PublicKey(address);
-const wallet = konektWeb3Wallet(provider, { publicKey, chainId: solana.id });
+const wallet = konektWeb3Wallet(provider, { publicKey, chainId: solanaMainnet.id });
 
 const signature = await wallet.signMessage(new TextEncoder().encode("Sign in to My app"));
 
@@ -129,9 +129,9 @@ const txSignature = await wallet.signAndSendTransaction(transaction, { skipPrefl
 Target another configured Solana chain without changing the active chain. Add it to `chains` first, or the request fails with `-32602`:
 
 ```ts
-import { solana, solanaDevnet } from "konekt/solana";
+import { solanaDevnet, solanaMainnet } from "konekt/solana";
 
-// chains: [solana, solanaDevnet]
+// chains: [solanaMainnet, solanaDevnet]
 const devnetWallet = konektWeb3Wallet(provider, {
   publicKey: new PublicKey(address),
   chainId: solanaDevnet.id,
@@ -144,12 +144,12 @@ const devnetWallet = konektWeb3Wallet(provider, {
 
 ```ts
 import type { Transaction } from "@solana/kit";
-import { solana } from "konekt/solana";
+import { solanaMainnet } from "konekt/solana";
 import { konektKitWallet } from "./bridge/solana/kit.ts";
 
 declare const transaction: Transaction;
 
-const wallet = konektKitWallet(provider, { address, chainId: solana.id });
+const wallet = konektKitWallet(provider, { address, chainId: solanaMainnet.id });
 
 const signature = await wallet.signMessage(new TextEncoder().encode("Sign in to My app"));
 const signed = await wallet.signTransaction(transaction);

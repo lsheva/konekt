@@ -33,7 +33,7 @@ class FakeRelay implements Relay {
 test("Provider construction stays synchronous and does not connect", () => {
   const relay = new FakeRelay();
   const provider = new Provider(
-    { projectId: "project", metadata: METADATA, chains: evm(1) },
+    { projectId: "project", metadata: METADATA, chains: [evm(1)] },
     { relay, seed: new Uint8Array(32) },
   );
   assert.equal(provider.connected, false);

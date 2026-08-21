@@ -29,7 +29,7 @@ pnpm add konekt
 
 You can use `npm install konekt` or `yarn add konekt` instead.
 
-The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted WalletConnect message. A matched Vite React app first-loads 10.75 kB with Konekt, against 145.74 kB for `@walletconnect/ethereum-provider`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
+The modern-browser EVM path is 14.74 kB minified and gzipped through the first encrypted WalletConnect message. A matched Vite React app first-loads 10.94 kB with Konekt, against 145.74 kB for `@walletconnect/ethereum-provider`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
 
 ## 1. Create the provider
 
@@ -37,7 +37,7 @@ Import `Provider` from the main package and the EVM chain helper from `konekt/ei
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId: "YOUR_PROJECT_ID",
@@ -47,11 +47,11 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: evm(1),
+  chains: [ethereumMainnet],
 });
 ```
 
-`evm(1)` means Ethereum mainnet. It returns the chain configuration that `Provider.init()` expects; do not pass a bare number to `chains`.
+`ethereumMainnet` is the ready-made Ethereum chain; the `evm()` factory builds any other EVM network from its chain ID. Do not pass a bare number to `chains`.
 
 `Provider.init()` creates one shared provider for the current JavaScript runtime and restores a saved session when possible. Call it once during app setup. Later calls return the same provider and do not apply new options.
 
@@ -152,7 +152,7 @@ User rejection and wallet errors can have other codes. Show the message to the u
 
 ```ts
 const testProvider = await Provider.create(
-  { projectId: "test", metadata, chains: evm(1) },
+  { projectId: "test", metadata, chains: [ethereumMainnet] },
   { session: fakeSession },
 );
 ```

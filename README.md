@@ -21,12 +21,12 @@ pnpm add konekt
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId,
   metadata: { name: "App", description: "My app", url: location.origin, icons: [] },
-  chains: evm(1),
+  chains: [ethereumMainnet],
 });
 
 provider.on("display_uri", showPairingUri);
@@ -35,9 +35,9 @@ await provider.connect();
 
 ## Why konekt
 
-The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted message,
+The modern-browser EVM path is 14.74 kB minified and gzipped through the first encrypted message,
 against 142.97 kB for the main bundle of `@walletconnect/ethereum-provider@2.23.10`. A matched Vite
-React app first-loads 10.75 kB with Konekt, 145.74 kB with that official provider, and 721.26 kB with
+React app first-loads 10.94 kB with Konekt, 145.74 kB with that official provider, and 721.26 kB with
 AppKit (React marked external). Konekt gets there by implementing the protocol directly, using Web
 Crypto before a polyfill, and keeping chains, authentication, reads, and UI behind separate entry
 points. Reads go to a transport you configure rather than a default public endpoint, and the wallet

@@ -63,7 +63,7 @@ export async function connected(
   provider = await Provider.create({
     projectId,
     metadata: METADATA,
-    chains: rpcUrl ? evm(...chains, { read: http(rpcUrl) }) : evm(...chains),
+    chains: chains.map((id) => (rpcUrl ? evm(id, { read: http(rpcUrl) }) : evm(id))),
     relayUrl,
     ...providerOpts,
   });
@@ -85,7 +85,7 @@ export async function freshProvider(opts: { chains?: number[]; storage?: Storage
   return Provider.create({
     projectId: WC_PROJECT_ID,
     metadata: METADATA,
-    chains: evm(...(opts.chains ?? [1])),
+    chains: (opts.chains ?? [1]).map((id) => evm(id)),
     relayUrl: WC_RELAY_URL,
     storage: opts.storage,
   });
