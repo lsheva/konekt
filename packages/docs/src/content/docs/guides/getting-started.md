@@ -29,7 +29,7 @@ pnpm add konekt
 
 You can use `npm install konekt` or `yarn add konekt` instead.
 
-The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted WalletConnect message. A matched Vite React app first-loads 69.20 kB with Konekt, against 204.25 kB for `@walletconnect/ethereum-provider`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
+The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted WalletConnect message. A matched Vite React app first-loads 10.75 kB with Konekt, against 145.74 kB for `@walletconnect/ethereum-provider`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
 
 ## 1. Create the provider
 

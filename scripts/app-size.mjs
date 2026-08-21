@@ -165,7 +165,7 @@ function markdown(current) {
   const lines = [
     "## Production app bundle size",
     "",
-    "Vite production builds of four matched React apps. First load is JavaScript and CSS the HTML requests up front. Overall is every JS, CSS, WASM, and font file in `dist`. Sizes are minified and gzipped per file.",
+    "Vite production builds of four matched React apps, with `react` and `react-dom` marked external. First load is JavaScript and CSS the HTML requests up front. Overall is every JS, CSS, WASM, and font file in `dist`. Sizes are minified and gzipped per file.",
     "",
     "| App | First load | Overall |",
     "| --- | ---: | ---: |",

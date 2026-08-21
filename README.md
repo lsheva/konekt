@@ -37,11 +37,11 @@ await provider.connect();
 
 The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted message,
 against 142.97 kB for the main bundle of `@walletconnect/ethereum-provider@2.23.10`. A matched Vite
-React app first-loads 69.20 kB with Konekt, 204.25 kB with that official provider, and 781.00 kB with
-AppKit. Konekt gets there by implementing the protocol directly, using Web Crypto before a polyfill,
-and keeping chains, authentication, reads, and UI behind separate entry points. Reads go to a
-transport you configure rather than a default public endpoint, and the wallet picker is your choice
-rather than a bundled modal.
+React app first-loads 10.75 kB with Konekt, 145.74 kB with that official provider, and 721.26 kB with
+AppKit (React marked external). Konekt gets there by implementing the protocol directly, using Web
+Crypto before a polyfill, and keeping chains, authentication, reads, and UI behind separate entry
+points. Reads go to a transport you configure rather than a default public endpoint, and the wallet
+picker is your choice rather than a bundled modal.
 
 - [Why Konekt is better](https://lsheva.github.io/konekt/guides/why-konekt/) — the full comparison
   with the official provider and Reown AppKit
