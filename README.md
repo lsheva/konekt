@@ -1,4 +1,8 @@
-# konekt
+<p align="center">
+  <img src="./konekt-framed.svg" alt="Konekt" width="128">
+</p>
+
+<h1 align="center">konekt</h1>
 
 [![npm](https://img.shields.io/npm/v/konekt?label=konekt)](https://www.npmjs.com/package/konekt)
 [![npm](https://img.shields.io/npm/v/konekt-ui?label=konekt-ui)](https://www.npmjs.com/package/konekt-ui)
@@ -32,11 +36,12 @@ await provider.connect();
 ## Why konekt
 
 The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted message,
-against 142.97 kB for the main bundle of `@walletconnect/ethereum-provider@2.23.10`. Konekt gets
-there by implementing the protocol directly, using Web Crypto before a polyfill, and keeping chains,
-authentication, reads, and UI behind separate entry points. Reads go to a transport you configure
-rather than a default public endpoint, and the wallet picker is your choice rather than a bundled
-modal.
+against 142.97 kB for the main bundle of `@walletconnect/ethereum-provider@2.23.10`. A matched Vite
+React app first-loads 10.75 kB with Konekt, 145.74 kB with that official provider, and 721.26 kB with
+AppKit (React marked external). Konekt gets there by implementing the protocol directly, using Web
+Crypto before a polyfill, and keeping chains, authentication, reads, and UI behind separate entry
+points. Reads go to a transport you configure rather than a default public endpoint, and the wallet
+picker is your choice rather than a bundled modal.
 
 - [Why Konekt is better](https://lsheva.github.io/konekt/guides/why-konekt/) — the full comparison
   with the official provider and Reown AppKit
@@ -51,6 +56,10 @@ modal.
 | [`docs`](packages/docs) | Guides and API reference |
 | [`example`](packages/example) | Slim wagmi 3 app |
 | [`showcase`](packages/showcase) | Capabilities lab |
+| [`size-walletconnect`](packages/size-walletconnect) | Vite size fixture: official Ethereum Provider |
+| [`size-appkit`](packages/size-appkit) | Vite size fixture: AppKit + ethers |
+| [`size-konekt`](packages/size-konekt) | Vite size fixture: Konekt |
+| [`size-konekt-ui`](packages/size-konekt-ui) | Vite size fixture: Konekt + UI |
 | [`integrations`](packages/integrations) | Application-owned Solana and CosmJS bridges to copy |
 
 Published packages are independently versioned. See [RELEASING.md](RELEASING.md).
@@ -66,6 +75,7 @@ pnpm dev:showcase
 pnpm dev:docs
 pnpm test
 pnpm check            # lint, tests, types, package and size checks
+pnpm size:apps        # Vite app first-load vs overall comparison
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and

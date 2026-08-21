@@ -91,6 +91,19 @@ code,
   margin-bottom: 28px;
 }
 
+.hero-brand {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.hero-mark {
+  width: 68px;
+  height: 84px;
+  flex: 0 0 auto;
+  filter: invert(1);
+}
+
 .hero h1 {
   margin: 0 0 8px;
   font-size: 2.25rem;
@@ -351,9 +364,23 @@ button:focus-visible {
 
 @media (max-width: 860px) {
   .grid,
-  .hero,
   .kv div {
     grid-template-columns: 1fr;
+  }
+
+  .hero {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero-mark {
+    width: 52px;
+    height: 64px;
   }
 }
 

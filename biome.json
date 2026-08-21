@@ -16,6 +16,7 @@
       "!**/.astro",
       "!packages/example",
       "!packages/showcase",
+      "!packages/size-*",
       "!packages/docs/src/content/docs/api"
     ]
   },

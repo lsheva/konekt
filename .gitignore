@@ -10,3 +10,4 @@ cache
 artifacts
 .env
 .size-limit-comment.md
+.app-size-comment.md

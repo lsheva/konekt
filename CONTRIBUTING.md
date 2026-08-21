@@ -62,8 +62,14 @@ pnpm size:update
 git add size-report.json
 ```
 
-The documentation table is generated from that file, so also run `pnpm --filter docs sync` and update
-any prose figure the script names as stale.
+If you change the size-comparison apps or their WalletConnect / AppKit / Konekt dependencies, refresh the Vite app report too:
+
+```sh
+pnpm size:apps:update
+git add app-size-report.json
+```
+
+The documentation tables are generated from those files, so also run `pnpm --filter docs sync` and update any prose figure the script names as stale.
 
 ## Code conventions
 
