@@ -1,0 +1,67 @@
+{
+  "apps": [
+    {
+      "name": "WalletConnect",
+      "package": "size-walletconnect",
+      "versions": {
+        "@walletconnect/ethereum-provider": "2.23.10"
+      },
+      "firstLoad": {
+        "raw": 667917,
+        "gzip": 204246
+      },
+      "overall": {
+        "raw": 2013550,
+        "gzip": 596557
+      }
+    },
+    {
+      "name": "WalletConnect + AppKit",
+      "package": "size-appkit",
+      "versions": {
+        "@reown/appkit": "1.8.23",
+        "@reown/appkit-adapter-ethers": "1.8.23",
+        "ethers": "6.17.0"
+      },
+      "firstLoad": {
+        "raw": 2706271,
+        "gzip": 781001
+      },
+      "overall": {
+        "raw": 3821528,
+        "gzip": 1139026
+      }
+    },
+    {
+      "name": "Konekt",
+      "package": "size-konekt",
+      "versions": {
+        "konekt": "0.1.0"
+      },
+      "firstLoad": {
+        "raw": 220436,
+        "gzip": 69198
+      },
+      "overall": {
+        "raw": 274314,
+        "gzip": 91932
+      }
+    },
+    {
+      "name": "Konekt + UI",
+      "package": "size-konekt-ui",
+      "versions": {
+        "konekt": "0.1.0",
+        "konekt-ui": "0.1.0"
+      },
+      "firstLoad": {
+        "raw": 246255,
+        "gzip": 76534
+      },
+      "overall": {
+        "raw": 310206,
+        "gzip": 103003
+      }
+    }
+  ]
+}

@@ -22,7 +22,7 @@ Recap resources (`urn:recap:`) are not implemented. Passing a `urn:recap:` entry
 
 7. since siwe is very small, maybe we should bake it in, and remove plugins??
 
-8. i think the size difference is even more dramatic. Create a sample project with appkit and compare size of it.
+8. ~~i think the size difference is even more dramatic. Create a sample project with appkit and compare size of it.~~ Four Vite apps in `packages/size-*`; `pnpm size:apps`.
 
 9.     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],

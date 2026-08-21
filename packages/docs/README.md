@@ -20,18 +20,18 @@ Three scripts run before every dev, build, and typecheck:
 | Script | What it does |
 | --- | --- |
 | `sync:skills` | Copies each package's `SKILL.md` into `public/skills/` so agents can fetch them. |
-| `sync:sizes` | Regenerates the measured table in `guides/bundle-size.md` from `size-report.json`, and fails if a guide quotes a stale derived total. |
+| `sync:sizes` | Regenerates the measured tables in `guides/bundle-size.md` from `size-report.json` and `app-size-report.json`, and fails if a guide quotes a stale derived total. |
 | `check:links` | Fails on root-relative links, which break under the GitHub Pages base path, and on relative links that point at no page. |
 | `check:snippets` | Type-checks every `ts` and `tsx` sample against the `konekt` and `konekt-ui` sources. |
 
-If `sync:sizes` fails, the bundle measurements changed. Run `pnpm size:update` at the root, then
-update the prose figure it names.
+If `sync:sizes` fails, the bundle measurements changed. Run `pnpm size:update` and `pnpm size:apps:update` at the root, then update the prose figure it names.
 
 ## Writing guides
 
 - Use relative links (`../chains/`), never root-relative (`/guides/chains/`). The site is served
   from a base path on GitHub Pages.
-- Quote bundle sizes from `size-report.json` rather than by hand.
+- Quote library sizes from `size-report.json` and Vite app sizes from `app-size-report.json` rather
+  than by hand.
 
 ## How samples are type-checked
 
