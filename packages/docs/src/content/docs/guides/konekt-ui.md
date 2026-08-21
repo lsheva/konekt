@@ -5,8 +5,8 @@ description: Add an accessible React wallet picker, pairing QR, and optional wag
 
 `konekt-ui` is an optional React interface for Konekt. It can list compatible wallets, show the pairing QR, open wallet links, and report connection errors.
 
-:::tip[About 95% smaller than AppKit]
-The Konekt wallet modal and stylesheet are **12.40 kB** minified and gzipped. The `@reown/appkit@1.8.19` main bundle is **253.77 kB**—Konekt’s focused UI layer is about **95% smaller**.
+:::tip[About 97% smaller than AppKit in a real app]
+A Vite React app with Konekt UI first-loads **18.05 kB** and totals **44.52 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.9%** smaller overall. React is marked external in both builds. The modal itself is **12.40 kB**.
 :::
 
 Choose an entry point:
@@ -22,13 +22,12 @@ The components require React 19 or newer. The wagmi entry point also requires wa
 
 Konekt UI is better when the app needs a wallet picker, pairing QR, and account controls without adopting a full onboarding platform.
 
-| UI path | JavaScript | CSS | Minified + gzip total |
-| --- | ---: | ---: | ---: |
-| Konekt `WalletModal` + `useProviderPairing` | 9.55 kB | 2.85 kB | **12.40 kB** |
-| Konekt wagmi `ConnectButton` | 11.02 kB | 2.85 kB | **13.87 kB** |
-| `@reown/appkit@1.8.19` main bundle | 253.77 kB | Included in bundle result | **253.77 kB** |
+| UI path | First load | Overall |
+| --- | ---: | ---: |
+| Vite app with Konekt `WalletModal` | **18.05 kB** | **44.52 kB** |
+| Vite app with `@reown/appkit@1.8.23` | **721.26 kB** | **1079.28 kB** |
 
-The Konekt rows include the QR encoder and exclude peer dependencies such as React, viem, and wagmi. The AppKit figure is the [Bundlephobia result for the published package](https://bundlephobia.com/package/@reown/appkit@1.8.19), including its bundled runtime dependencies.
+Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.40 kB** (9.55 kB JavaScript and 2.85 kB CSS); the wagmi `ConnectButton` path is **13.87 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
 
 | Capability | Konekt UI | Reown AppKit |
 | --- | --- | --- |

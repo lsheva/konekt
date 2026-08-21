@@ -39,21 +39,37 @@ Exact output varies with dependency and bundler versions. The committed lockfile
 pnpm size
 ```
 
-## Compared with Reown
+## Compared in a real Vite app
 
-Konekt is materially smaller because it is a focused WalletConnect client, uses native browser cryptography first, and does not depend on the `@walletconnect` SDK package graph.
+The table above is each Konekt import on its own, without React. The headless path through the first encrypted message is 14.53 kB, the wallet modal and styles are 12.40 kB, and together they are a 26.93 kB connect stack. The numbers that show up in a browser are larger, and so is the gap versus the official stack, because `@walletconnect/ethereum-provider` and AppKit emit many extra chunks that package-main-bundle tools omit.
 
-| Connection path | Minified + gzip |
-| --- | ---: |
-| Konekt headless EVM, through first encrypted message | **14.53 kB** |
-| `@walletconnect/ethereum-provider@2.23.10` main bundle | **142.97 kB** |
-| `konekt-ui` wallet modal + styles | **12.40 kB** |
-| Konekt provider + React wallet modal + styles | **26.93 kB** |
-| `@reown/appkit@1.8.19` main bundle | **253.77 kB** |
+Four matched React apps in this repository each connect Ethereum and show an address. They share Vite, React 19, and the same tiny shell. `react` and `react-dom` are marked external, so the totals are the wallet stack. The only other difference is which wallet library each app imports:
 
-The headless comparison makes Konekt about **90% smaller** than the official Ethereum Provider’s main bundle. The focused `konekt-ui` layer is about **95% smaller** than AppKit; even the complete Konekt provider and UI stack is about **89% smaller**. AppKit is a broader product with embedded login, smart accounts, swaps, on-ramp, payments, and other features; Konekt is better suited to apps that already own those product decisions and want the connection layer to stay small.
+<!-- app-size-report:start -->
 
-The Reown figures are Bundlephobia results for the exact published versions: [`@walletconnect/ethereum-provider@2.23.10`](https://bundlephobia.com/package/@walletconnect/ethereum-provider@2.23.10) and [`@reown/appkit@1.8.19`](https://bundlephobia.com/package/@reown/appkit@1.8.19). Bundlephobia reports the main bundle separately from dynamic assets. The Konekt headless figure includes its lazy cipher chunk, making it the transfer through the first encrypted protocol message rather than only the initial entry.
+| App | First load | Overall |
+| --- | ---: | ---: |
+| WalletConnect | 145.74 kB | 538.06 kB |
+| WalletConnect + AppKit | 721.26 kB | 1079.28 kB |
+| Konekt | 10.75 kB | 33.49 kB |
+| Konekt + UI | 18.05 kB | 44.52 kB |
+
+<!-- app-size-report:end -->
+
+- `packages/size-walletconnect` — `@walletconnect/ethereum-provider@2.23.10`, `showQrModal: false`
+- `packages/size-appkit` — `@reown/appkit@1.8.23` with the ethers adapter, email, socials, swaps, on-ramp, and analytics turned off
+- `packages/size-konekt` — `Provider` + `evm`
+- `packages/size-konekt-ui` — the same provider plus `WalletModal`
+
+First load is the JavaScript and CSS the production `index.html` requests: the entry script, stylesheets, and modulepreloads. Overall is every JS, CSS, WASM, and font file Vite emitted. Each file is minified, gzipped at level 9, then summed.
+
+Headless Konekt is **92.6%** smaller on first load and **93.8%** smaller overall than the official Ethereum Provider. Konekt with UI is **97.5%** smaller on first load and **95.9%** smaller overall than AppKit.
+
+The Ethereum Provider still emits AppKit modal chunks as dynamic imports even with `showQrModal: false`, which is why its overall size is far above its first load. AppKit’s first load stays large because `createAppKit()` module-preloads wallet lists, email inputs, and related UI even when those features are disabled. The Konekt apps leave Noble compatibility chunks off the first load, the same way a modern-browser session would.
+
+```sh
+pnpm size:apps
+```
 
 See [Why Konekt is better](../why-konekt/) for the architectural comparison and [Konekt UI](../konekt-ui/#konekt-ui-vs-reown-appkit) for the direct UI feature comparison.
 

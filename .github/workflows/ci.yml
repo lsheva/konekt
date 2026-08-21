@@ -44,17 +44,20 @@ jobs:
       - run: pnpm size:built
         env:
           SIZE_LIMIT_BASE: ${{ github.event.pull_request.base.sha }}
+      - run: pnpm size:apps:built
       - if: always() && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@v8
         with:
           script: |
             const fs = require("node:fs");
-            const report = ".size-limit-comment.md";
-            if (!fs.existsSync(report)) return;
-
             const marker = "<!-- size-limit-report -->";
-            const body = `${marker}\n${fs.readFileSync(report, "utf8")}`;
+            const parts = [".size-limit-comment.md", ".app-size-comment.md"]
+              .filter((file) => fs.existsSync(file))
+              .map((file) => fs.readFileSync(file, "utf8").trim());
+            if (parts.length === 0) return;
+
+            const body = `${marker}\n${parts.join("\n\n")}\n`;
             const comments = await github.paginate(github.rest.issues.listComments, {
               ...context.repo,
               issue_number: context.issue.number,

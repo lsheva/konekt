@@ -3,7 +3,7 @@ title: konekt
 description: Connect a browser app to WalletConnect wallets with a small, modular provider.
 template: splash
 hero:
-  tagline: A better WalletConnect client for performance-minded apps. About 90% smaller than the official headless EVM provider, with explicit chains and no @walletconnect runtime.
+  tagline: A better WalletConnect client for performance-minded apps. A Vite React app first-loads 10.75 kB with Konekt, against 145.74 kB for the official provider and 721.26 kB with AppKit.
   image:
     html: '<img src="./favicon.svg" alt="The Konekt mark" width="400" height="400" style="border-radius: 20%">'
   actions:
@@ -24,8 +24,8 @@ Konekt gives your app an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)-com
 ## A smaller, clearer connection layer
 
 <CardGrid>
-  <Card title="About 90% smaller" icon="open-book">
-    The modern-browser EVM path is **14.53 kB** through the first encrypted message. The official `@walletconnect/ethereum-provider@2.23.10` main bundle is **142.97 kB**, minified and gzipped.
+  <Card title="Measured in a real app" icon="open-book">
+    A Vite React app first-loads **10.75 kB** with Konekt, **145.74 kB** with the official Ethereum Provider, and **721.26 kB** with AppKit. React is marked external in all three.
   </Card>
   <Card title="No runtime framework tax" icon="puzzle">
     Konekt has no `@walletconnect` runtime dependency. Add chain adapters, reads, authentication, and UI only when your app uses them.
