@@ -9,8 +9,8 @@ description: Add an accessible React wallet picker, pairing QR, and optional wag
 The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Provider` through `WalletModal` and `useProviderPairing`, then exercises every method the session settles.
 :::
 
-:::tip[About 95% smaller than AppKit]
-The Konekt wallet modal and stylesheet are **12.40 kB** minified and gzipped. The `@reown/appkit@1.8.19` main bundle is **253.77 kB**—Konekt’s focused UI layer is about **95% smaller**.
+:::tip[About 97% smaller than AppKit in a real app]
+A Vite React app with Konekt UI first-loads **18.05 kB** and totals **44.52 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.9%** smaller overall. React is marked external in both builds. The modal itself is **12.40 kB**.
 :::
 
 Choose an entry point:
