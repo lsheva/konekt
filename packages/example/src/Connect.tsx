@@ -1,10 +1,9 @@
 import { useCallback, useRef } from "react";
 import type { Connector } from "wagmi";
 import { useConfig } from "wagmi";
-import { ConnectButton } from "konekt-ui/wagmi";
+import { abortPairing, ConnectButton, konekt } from "konekt-ui/wagmi";
 import "konekt-ui/styles.css";
 import { konektOptions } from "./Wagmi";
-import { abortPairing, konekt } from "./konekt";
 
 export const Connect: React.FC = () => {
   const config = useConfig();

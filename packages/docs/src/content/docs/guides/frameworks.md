@@ -148,7 +148,7 @@ Follow the [wagmi guide](../wagmi/) for the connector, then make the config SSR-
 import { cookieStorage, createConfig, createStorage, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
-import { konekt } from "./konekt";
+import { konekt } from "konekt-ui/wagmi";
 
 const konektOptions = {
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID as string,

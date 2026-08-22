@@ -1,8 +1,9 @@
-import { getAddress, numberToHex } from "viem";
 import type { CreateProviderOptions, Provider } from "konekt";
 import type { EvmExt } from "konekt/eip155";
-import { createConnector } from "wagmi";
+import { getAddress, numberToHex } from "viem";
+import { type CreateConnectorFn, createConnector } from "wagmi";
 
+/** Provider options the connector forwards to `Provider.init()`. Chains come from the wagmi config. */
 export type KonektParameters = Pick<CreateProviderOptions, "projectId" | "metadata" | "relayUrl">;
 
 type EvmProvider = Provider & EvmExt;
@@ -11,11 +12,21 @@ konekt.type = "konekt";
 
 let pairingAbort: AbortController | undefined;
 
+/** Aborts the pending pairing proposal. Pass it as `onDismiss` so closing the modal stops the connect. */
 export function abortPairing() {
   pairingAbort?.abort();
 }
 
-export function konekt(parameters: KonektParameters) {
+/**
+ * The Konekt connector for `createConfig()`.
+ *
+ * It imports Konekt and calls `Provider.init()` lazily when wagmi first asks for the provider, so
+ * static registration costs one dynamic import during wagmi's reconnect and opens a relay socket
+ * only when a saved session exists. EVM chains come from the wagmi config; `display_uri` surfaces
+ * through the connector's `message` event, which is how `ConnectButton` and `useWagmiPairing`
+ * find it.
+ */
+export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvider> {
   return createConnector((config) => {
     let provider: EvmProvider | undefined;
     let accountsChanged: ((accounts: string[]) => void) | undefined;

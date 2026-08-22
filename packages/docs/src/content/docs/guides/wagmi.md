@@ -3,7 +3,7 @@ title: wagmi
 description: Connect a wagmi 3 React app through Konekt and use the optional wallet and account UI.
 ---
 
-Wagmi needs a connector that translates its connection lifecycle into EIP-1193 provider calls. Konekt supplies the provider; a small application connector adapts it to wagmi.
+Wagmi needs a connector that translates its connection lifecycle into EIP-1193 provider calls. Konekt supplies the provider; the connector from `konekt-ui/wagmi` adapts it to wagmi.
 
 In this setup:
 
@@ -23,9 +23,13 @@ You also need a WalletConnect project ID.
 
 ## Add the Konekt connector
 
-Konekt does not ship a wagmi-specific connector. Keeping the adapter in the application lets it follow the app’s wagmi version and connection policy without adding wagmi to Konekt’s core.
+`konekt-ui/wagmi` exports the connector: `konekt(options)` for wagmi configuration and `abortPairing()` for cancelling the current proposal. The `konekt` core package still has no wagmi dependency; the connector lives in the entry point that already declares wagmi as a peer.
 
-Copy the repository’s tested [Konekt connector implementation](https://github.com/lsheva/konekt/blob/main/packages/example/src/konekt.ts) into your application, for example as `src/konekt.ts`. It exports `konekt(options)` for wagmi configuration and `abortPairing()` for cancelling the current proposal.
+```ts
+import { konekt } from "konekt-ui/wagmi";
+```
+
+If your app does not use `konekt-ui`, copy the [connector implementation](https://github.com/lsheva/konekt/blob/main/packages/konekt-ui/src/wagmi/connector.ts) into your application instead — it is one self-contained file.
 
 The connector:
 
@@ -46,7 +50,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
-import { konekt } from "./konekt";
+import { konekt } from "konekt-ui/wagmi";
 
 const projectId = "YOUR_PROJECT_ID";
 
@@ -106,9 +110,8 @@ The wagmi `transports` are intentionally separate from Konekt’s optional EVM `
 - network switching and disconnect controls.
 
 ```tsx
-import { ConnectButton } from "konekt-ui/wagmi";
+import { abortPairing, ConnectButton } from "konekt-ui/wagmi";
 import "konekt-ui/styles.css";
-import { abortPairing } from "./konekt";
 import { konektOptions } from "./web3";
 
 export function WalletControls() {
@@ -200,8 +203,7 @@ Use `useWagmiPairing()` when you want to keep your own connect button while reus
 ```tsx
 import { useState } from "react";
 import { WalletModal } from "konekt-ui";
-import { useWagmiPairing } from "konekt-ui/wagmi";
-import { abortPairing } from "./konekt";
+import { abortPairing, useWagmiPairing } from "konekt-ui/wagmi";
 
 export function CustomWalletButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
@@ -234,8 +236,7 @@ That import still happens for a visitor who never connects a wallet. If you need
 import { useCallback, useRef } from "react";
 import type { Connector } from "wagmi";
 import { useConfig } from "wagmi";
-import { ConnectButton } from "konekt-ui/wagmi";
-import { abortPairing, konekt } from "./konekt";
+import { abortPairing, ConnectButton, konekt } from "konekt-ui/wagmi";
 import { konektOptions } from "./web3";
 
 export function WalletControls() {
@@ -267,7 +268,7 @@ To keep the provider and modal out of the initial page chunk in other ways, foll
 
 ### “No WalletConnect connector is registered”
 
-Add `konekt(konektOptions)` to `createConfig({ connectors })`. The connector’s `id` or `type` must be `"konekt"`.
+Import `konekt` from `konekt-ui/wagmi` and add `konekt(konektOptions)` to `createConfig({ connectors })`. The connector’s `id` or `type` must be `"konekt"`.
 
 ### The QR closes but pairing continues
 

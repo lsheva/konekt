@@ -42,6 +42,14 @@
       "types": "./dist/wagmi/index.d.ts",
       "import": "./dist/wagmi/index.js"
     },
+    "./wallet-standard": {
+      "types": "./dist/wallet-standard/index.d.ts",
+      "import": "./dist/wallet-standard/index.js"
+    },
+    "./cosmos": {
+      "types": "./dist/cosmos/index.d.ts",
+      "import": "./dist/cosmos/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
@@ -49,6 +57,12 @@
     "*": {
       "wagmi": [
         "./dist/wagmi/index.d.ts"
+      ],
+      "wallet-standard": [
+        "./dist/wallet-standard/index.d.ts"
+      ],
+      "cosmos": [
+        "./dist/cosmos/index.d.ts"
       ]
     }
   },
@@ -68,11 +82,15 @@
     "lint": "biome check ."
   },
   "peerDependencies": {
+    "konekt": ">=0.1.0",
     "react": ">=19",
     "viem": ">=2",
     "wagmi": ">=3"
   },
   "peerDependenciesMeta": {
+    "konekt": {
+      "optional": true
+    },
     "viem": {
       "optional": true
     },
@@ -86,6 +104,7 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "@types/react": "^19.2.18",
+    "konekt": "workspace:*",
     "react": "^19.2.8",
     "typescript": "^5.9.2",
     "viem": "^2.55.18",
