@@ -1,7 +1,11 @@
 # konekt showcase
 
 Capabilities lab for `konekt`: pairing, session, every EIP-1193 method the provider exposes,
-kernel JSON-RPC reads, wallet redirects, and the event log.
+kernel JSON-RPC reads, wallet redirects, and the event log. The connect UI is `WalletModal` and
+`useProviderPairing` from `konekt-ui`.
+
+Live at <https://lsheva.github.io/konekt/showcase/>, deployed by `.github/workflows/docs.yml`
+into the docs Pages artifact.
 
 The slimmer wagmi app is `packages/example`.
 

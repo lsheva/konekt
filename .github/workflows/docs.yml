@@ -1,4 +1,4 @@
-name: Deploy docs
+name: Deploy site
 
 on:
   push:
@@ -25,7 +25,14 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install
+      - run: pnpm build
       - run: pnpm --filter docs build
+      # Same project id the konekt tests use; the showcase bundle bakes it in at build time.
+      - run: pnpm --filter showcase build
+        env:
+          WC_PROJECT_ID: ${{ secrets.WC_PROJECT_ID }}
+      # One Pages site per repository: the showcase rides along inside the docs artifact.
+      - run: cp -R packages/showcase/dist packages/docs/dist/showcase
       - uses: actions/upload-pages-artifact@v5
         with:
           path: packages/docs/dist
