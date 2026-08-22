@@ -42,6 +42,14 @@
       "types": "./dist/wagmi/index.d.ts",
       "import": "./dist/wagmi/index.js"
     },
+    "./wallet-standard": {
+      "types": "./dist/wallet-standard/index.d.ts",
+      "import": "./dist/wallet-standard/index.js"
+    },
+    "./cosmos": {
+      "types": "./dist/cosmos/index.d.ts",
+      "import": "./dist/cosmos/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
@@ -49,6 +57,12 @@
     "*": {
       "wagmi": [
         "./dist/wagmi/index.d.ts"
+      ],
+      "wallet-standard": [
+        "./dist/wallet-standard/index.d.ts"
+      ],
+      "cosmos": [
+        "./dist/cosmos/index.d.ts"
       ]
     }
   },

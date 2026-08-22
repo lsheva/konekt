@@ -18,6 +18,11 @@ export {
 } from "./explorer.ts";
 export { formatWalletLink, isMobile, openWalletLink, walletHref } from "./link.ts";
 export { Modal, type ModalProps } from "./Modal.tsx";
-export { type PairingProvider, useProviderPairing } from "./providerPairing.ts";
+export {
+  type LocalWalletSource,
+  type PairingProvider,
+  type ProviderPairingOptions,
+  useProviderPairing,
+} from "./providerPairing.ts";
 export { QrCode, type QrCodeProps } from "./QrCode.tsx";
 export { type LocalWallet, type Pairing, WalletModal, type WalletModalProps } from "./WalletModal.tsx";

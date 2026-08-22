@@ -13,6 +13,8 @@ import type { EvmExt } from "konekt/eip155";
 import { cacaosOf } from "konekt/siwe";
 import { useBalance, useChains, usePublicClient } from "wagmi";
 import { useProviderPairing, WalletModal } from "konekt-ui";
+import { useCosmosSource } from "konekt-ui/cosmos";
+import { useWalletStandardSource } from "konekt-ui/wallet-standard";
 import konektLogo from "../../../konekt-logo.svg";
 import { evmAddresses, firstAddress } from "./accounts";
 import { debugBus } from "./debugBus";
@@ -78,11 +80,27 @@ export const Showcase: React.FC = () => {
   const cosmosAccount = firstAddress(session, "cosmos");
   const connected = !!session;
   const balance = useBalance({ address });
-  const pairing = useProviderPairing(provider);
 
   const push = useCallback((name: string, value: unknown) => {
     setLog((prev) => [{ t: stamp(), name, value: pretty(value) }, ...prev].slice(0, 40));
   }, []);
+
+  /**
+   * Injected wallets never touch the konekt provider: the sources list browser extensions in the
+   * modal, and a connected handle stays with the app. wallet-standard covers Solana extensions;
+   * cosmos probes Keplr-API wallets.
+   */
+  const solanaInjected = useWalletStandardSource({
+    onConnect: (wallet) =>
+      push("wallet-standard connect", { name: wallet.name, accounts: wallet.accounts.map((a) => a.address) }),
+    onError: (e) => setPairError(e.message),
+  });
+  const cosmosInjected = useCosmosSource({
+    chainIds: ["cosmoshub-4"],
+    onConnect: () => push("keplr enable", "connected; signers come from the injected handle"),
+    onError: (e) => setPairError(e.message),
+  });
+  const pairing = useProviderPairing(provider, { sources: [solanaInjected, cosmosInjected] });
 
   useEffect(() => {
     let cancelled = false;

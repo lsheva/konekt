@@ -38,6 +38,29 @@ export function WalletButton({ provider, projectId }: { provider: Provider; proj
 `useProviderPairing` supports every namespace and does not require wagmi. The QR view calls
 `provider.connect({ signal })`, renders `display_uri`, and aborts the signal when it closes.
 
+## Injected wallets without wagmi
+
+`useProviderPairing(provider, { sources })` lists injected wallets as installed choices next to
+WalletConnect pairing. Sources are discovery only: connecting one never touches the provider, and
+after `onConnect` the app owns the wallet handle, its accounts, and its signing.
+
+```tsx
+import { useCosmosSource } from "konekt-ui/cosmos";
+import { useWalletStandardSource } from "konekt-ui/wallet-standard";
+
+const solana = useWalletStandardSource({ onConnect: keepSolanaHandle });
+const cosmos = useCosmosSource({ chainIds: ["cosmoshub-4"], onConnect: keepKeplrHandle });
+const pairing = useProviderPairing(provider, { sources: [solana, cosmos] });
+```
+
+- `konekt-ui/wallet-standard` is for Solana: it lists Wallet Standard extensions (Phantom,
+  Solflare, Backpack) serving `solana:` chains. The `chains` option takes Wallet Standard network
+  names like `"solana:mainnet"`, not Konekt's genesis-hash CAIP-2 ids.
+- `konekt-ui/cosmos` probes `window.keplr`-shaped extensions (Keplr, Leap) and calls
+  `enable(chainIds)` on connect.
+- EVM injected wallets stay with wagmi (`useWagmiPairing`); do not re-implement them as a source.
+- A custom source is `{ wallets, connect, connected }` (`LocalWalletSource` from `konekt-ui`).
+
 ## wagmi
 
 ```tsx

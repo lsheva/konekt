@@ -19,8 +19,10 @@ Choose an entry point:
 | --- | --- |
 | `konekt-ui` | You have a Konekt `Provider`. Works with every configured namespace and does not require wagmi. |
 | `konekt-ui/wagmi` | Your EVM app already manages connectors and account state with wagmi. |
+| `konekt-ui/wallet-standard` | Your Solana app should list injected extensions (Phantom, Solflare, Backpack) next to WalletConnect pairing. |
+| `konekt-ui/cosmos` | Your Cosmos app should list Keplr-API extensions (Keplr, Leap) next to WalletConnect pairing. |
 
-The components require React 19 or newer. The wagmi entry point also requires wagmi 3 and viem 2.
+The components require React 19 or newer. The wagmi entry point also requires wagmi 3 and viem 2; the wallet-standard and cosmos entry points need only React.
 
 ## Konekt UI vs Reown AppKit
 
@@ -109,7 +111,7 @@ Pairing does not begin when the modal opens. It begins when the user picks a wal
 
 Because it closes itself, keep `open` as controlled state and let `onClose` set it to `false`. The modal also skips pairing entirely when `pairing.connected` is already true.
 
-The provider adapter does not supply installed browser extensions. It lists WalletConnect Explorer wallets and the generic QR option. Use the wagmi adapter when you also want registered browser connectors to appear as installed wallets.
+On its own, the provider adapter lists WalletConnect Explorer wallets and the generic QR option. Pass `sources` to also list injected browser wallets (see [Injected wallets](#injected-wallets-without-wagmi)), or use the wagmi adapter when wagmi already manages your EVM connectors.
 
 ### `WalletModal` props
 
@@ -128,6 +130,86 @@ The provider adapter does not supply installed browser extensions. It lists Wall
 | `unstyled` | `boolean` | Drops the default `kui-*` classes, keeping `data-kui` attributes. |
 
 `className`, `style`, `theme`, and `unstyled` are shared by every konekt-ui component.
+
+## Injected wallets without wagmi
+
+wagmi remains the path for EVM apps: it already discovers injected EVM wallets and owns their account state, so konekt-ui only mirrors its connectors. Solana and Cosmos have no wagmi. For them, `useProviderPairing` accepts `sources` — discovery hooks whose wallets appear as installed choices next to WalletConnect pairing:
+
+| Import | Ecosystem | Discovery |
+| --- | --- | --- |
+| `konekt-ui/wallet-standard` | Solana | Wallet Standard announce events (Phantom, Solflare, Backpack) |
+| `konekt-ui/cosmos` | Cosmos | Probes `window.keplr`-shaped extensions (Keplr, Leap) |
+
+`konekt-ui/wallet-standard` is for Solana. The underlying announce protocol is chain-agnostic, but this entry point lists only wallets that serve `solana:` chains unless you pass an explicit `chains` filter.
+
+Sources are discovery only. Connecting an injected wallet never touches the Konekt provider, and after `onConnect` the app owns the wallet handle: accounts, signing, and disconnects come from that handle, not from the modal.
+
+```tsx
+import { useState } from "react";
+import type { Provider } from "konekt";
+import { useProviderPairing, WalletModal } from "konekt-ui";
+import { type CosmosInjectedWallet, useCosmosSource } from "konekt-ui/cosmos";
+import { useWalletStandardSource, type WalletStandardWallet } from "konekt-ui/wallet-standard";
+
+export function MultiChainConnection({ provider, projectId }: { provider: Provider; projectId: string }) {
+  const [open, setOpen] = useState(false);
+  const [solanaWallet, setSolanaWallet] = useState<WalletStandardWallet>();
+  const [cosmosWallet, setCosmosWallet] = useState<CosmosInjectedWallet>();
+
+  const solana = useWalletStandardSource({ onConnect: setSolanaWallet });
+  const cosmos = useCosmosSource({ chainIds: ["cosmoshub-4"], onConnect: setCosmosWallet });
+  const pairing = useProviderPairing(provider, { sources: [solana, cosmos] });
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Connect wallet
+      </button>
+      <WalletModal open={open} projectId={projectId} pairing={pairing} onClose={() => setOpen(false)} />
+      {solanaWallet && <p>Solana: {solanaWallet.accounts[0]?.address}</p>}
+      {cosmosWallet && <p>Cosmos wallet enabled.</p>}
+    </>
+  );
+}
+```
+
+After `onConnect`, sign with the handle's own API: the Wallet Standard wallet exposes features such as `solana:signMessage` and `solana:signTransaction`, and the Keplr handle offers offline signers for CosmJS. The [Solana](../solana/) and [CosmJS](../cosmjs/) guides show application-owned signing bridges that work the same way over a Konekt session.
+
+### `useWalletStandardSource` options
+
+| Option | Type | Purpose |
+| --- | --- | --- |
+| `onConnect` | `(wallet: WalletStandardWallet) => void` | Receives the connected wallet. Required. |
+| `chains` | `readonly string[]` | Wallet Standard chain ids a wallet must serve, e.g. `"solana:mainnet"`. Defaults to any `solana:` chain. These are Wallet Standard network names, not the genesis-hash CAIP-2 ids Konekt chains use. |
+| `onError` | `(error: Error) => void` | Receives connect failures, e.g. a dismissed extension prompt. |
+
+### `useCosmosSource` options
+
+| Option | Type | Purpose |
+| --- | --- | --- |
+| `chainIds` | `readonly string[]` | Cosmos chain ids passed to `enable`, e.g. `["cosmoshub-4"]`. Required. |
+| `onConnect` | `(wallet: CosmosInjectedWallet) => void` | Receives the enabled wallet. Required. |
+| `onError` | `(error: Error) => void` | Receives enable failures. |
+
+### Writing your own source
+
+A source is a plain object, so an app can supply discovery konekt-ui does not ship — for example EIP-6963 announcements in a vanilla EVM app that does not use wagmi:
+
+```ts
+import type { LocalWalletSource } from "konekt-ui";
+
+declare const eip6963Wallets: LocalWalletSource["wallets"];
+
+const injectedEvm: LocalWalletSource = {
+  wallets: eip6963Wallets,
+  connect: (wallet) => {
+    // request accounts on the announced provider and keep the handle
+  },
+  connected: false,
+};
+```
+
+Each source owns its wallets: the modal routes a clicked wallet back to the source whose `wallets` contains it, and a source turning `connected` closes the modal.
 
 ## wagmi
 
