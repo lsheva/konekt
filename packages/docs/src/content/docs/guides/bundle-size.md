@@ -52,7 +52,7 @@ Four matched React apps in this repository each connect Ethereum and show an add
 | WalletConnect | 145.74 kB | 538.06 kB |
 | WalletConnect + AppKit | 721.26 kB | 1079.28 kB |
 | Konekt | 10.75 kB | 33.49 kB |
-| Konekt + UI | 18.05 kB | 44.52 kB |
+| Konekt + UI | 18.09 kB | 44.56 kB |
 
 <!-- app-size-report:end -->
 

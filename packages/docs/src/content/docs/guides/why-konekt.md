@@ -25,13 +25,13 @@ Reown AppKit remains a different choice: it is a complete onboarding product wit
 
 ## Bundle comparison
 
-Package-main-bundle numbers understate the official stack. A production Vite React app that only connects Ethereum and shows an address transfers **10.75 kB** on first load with Konekt, **145.74 kB** with `@walletconnect/ethereum-provider@2.23.10`, **18.05 kB** with Konekt UI, and **721.26 kB** with `@reown/appkit@1.8.23`. After every lazy chunk is counted, those become **33.49 kB**, **538.06 kB**, **44.52 kB**, and **1079.28 kB**. React is marked external in all four builds.
+Package-main-bundle numbers understate the official stack. A production Vite React app that only connects Ethereum and shows an address transfers **10.75 kB** on first load with Konekt, **145.74 kB** with `@walletconnect/ethereum-provider@2.23.10`, **18.09 kB** with Konekt UI, and **721.26 kB** with `@reown/appkit@1.8.23`. After every lazy chunk is counted, those become **33.49 kB**, **538.06 kB**, **44.56 kB**, and **1079.28 kB**. React is marked external in all four builds.
 
 | Vite app | First load | Overall |
 | --- | ---: | ---: |
 | Konekt | **10.75 kB** | **33.49 kB** |
 | `@walletconnect/ethereum-provider@2.23.10` | **145.74 kB** | **538.06 kB** |
-| Konekt + `konekt-ui` | **18.05 kB** | **44.52 kB** |
+| Konekt + `konekt-ui` | **18.09 kB** | **44.56 kB** |
 | `@reown/appkit@1.8.23` + ethers adapter | **721.26 kB** | **1079.28 kB** |
 
 Headless Konekt is **92.6%** smaller on first load and **93.8%** smaller overall. With a wallet modal, Konekt is **97.5%** smaller on first load and **95.9%** smaller overall than AppKit. The four apps live in `packages/size-walletconnect`, `packages/size-appkit`, `packages/size-konekt`, and `packages/size-konekt-ui`. They share React 19 and Vite; the AppKit app turns email, socials, swaps, on-ramp, and analytics off.
