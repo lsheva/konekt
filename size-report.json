@@ -1,7 +1,7 @@
 [
   {
     "name": "Provider + EVM",
-    "size": 9690,
+    "size": 9903,
     "limit": 11000
   },
   {
@@ -36,7 +36,7 @@
   },
   {
     "name": "Solana adapter",
-    "size": 731,
+    "size": 752,
     "limit": 900
   },
   {
@@ -51,7 +51,7 @@
   },
   {
     "name": "wagmi connector",
-    "size": 1100,
+    "size": 1094,
     "limit": 1300
   },
   {

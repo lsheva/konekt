@@ -41,7 +41,7 @@ export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvi
         provider = await Provider.init({
           projectId: parameters.projectId,
           metadata: parameters.metadata,
-          chains: evm(...config.chains.map((c) => c.id)),
+          chains: config.chains.map((c) => evm(c)),
           relayUrl: parameters.relayUrl,
         });
       }

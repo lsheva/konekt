@@ -34,7 +34,7 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: evm(1, { read: http(rpcUrl) }),
+  chains: [evm(1, { read: http(rpcUrl) })],
 });
 
 provider.on("display_uri", (uri) => {

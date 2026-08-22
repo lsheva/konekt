@@ -23,7 +23,7 @@ Nothing special is required. Top-level initialization works because the module o
 ```ts
 // src/provider.ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 export const provider = await Provider.init({
   projectId: import.meta.env.VITE_WC_PROJECT_ID,
@@ -33,7 +33,7 @@ export const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: evm(1),
+  chains: [ethereumMainnet],
 });
 ```
 
@@ -53,7 +53,7 @@ let providerPromise: Promise<Provider> | undefined;
 
 function getProvider() {
   providerPromise ??= (async () => {
-    const [{ Provider }, { evm }] = await Promise.all([
+    const [{ Provider }, { ethereumMainnet }] = await Promise.all([
       import("konekt"),
       import("konekt/eip155"),
     ]);
@@ -66,7 +66,7 @@ function getProvider() {
         url: window.location.origin,
         icons: [new URL("/icon.png", window.location.origin).href],
       },
-      chains: evm(1),
+      chains: [ethereumMainnet],
     });
   })().catch((error) => {
     providerPromise = undefined;

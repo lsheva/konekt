@@ -20,7 +20,7 @@ Add `siwe()` to the provider’s `features`:
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 import { siwe, cacaosOf } from "konekt/siwe";
 
 async function getNonce() {
@@ -32,7 +32,7 @@ async function getNonce() {
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1),
+  chains: [ethereumMainnet],
   features: [
     siwe({
       domain: location.host,

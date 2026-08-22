@@ -38,12 +38,12 @@ These are connection secrets. Anything that can read them can send requests as y
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1),
+  chains: [ethereumMainnet],
   storage: {
     getItem: async (key) => sessionStorage.getItem(key),
     setItem: async (key, value) => sessionStorage.setItem(key, value),
@@ -64,7 +64,7 @@ Outside a browser, where `localStorage` does not exist, Konekt falls back to mem
 `Provider.init()` reads the stored session before it resolves. When one exists, the returned provider is already connected: `provider.connected` is `true`, the EVM adapter has populated `accounts` and `chainId`, and no `display_uri` is emitted.
 
 ```ts
-const provider = await Provider.init({ projectId, metadata, chains: evm(1) });
+const provider = await Provider.init({ projectId, metadata, chains: [ethereumMainnet] });
 
 if (provider.connected) {
   showAccount(provider.accounts[0]);
@@ -104,11 +104,11 @@ Use `disconnect` as the single place that clears connected state, so wallet-init
 Because `Provider.init()` always returns the same singleton, a page offering disconnect followed by reconnect should either reload after disconnecting, or manage its own instance with `Provider.create()` and build a fresh one for the next connection:
 
 ```ts
-let provider = await Provider.create({ projectId, metadata, chains: evm(1) });
+let provider = await Provider.create({ projectId, metadata, chains: [ethereumMainnet] });
 
 async function disconnect() {
   await provider.disconnect();
-  provider = await Provider.create({ projectId, metadata, chains: evm(1) });
+  provider = await Provider.create({ projectId, metadata, chains: [ethereumMainnet] });
 }
 ```
 
@@ -141,7 +141,7 @@ One failure is not retried. If the relay rejects your credentials it closes with
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1),
+  chains: [ethereumMainnet],
   ttl: { propose: 120 },
 });
 ```
@@ -156,7 +156,7 @@ Shortening `propose` makes an abandoned QR expire sooner. Shortening `request` g
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1),
+  chains: [ethereumMainnet],
   onDebug: (event) => {
     if (event.type === "error") reportError(event.error);
   },
@@ -180,10 +180,10 @@ For local work, setting the `WC_DEBUG=1` environment variable prints a truncated
 
 ```ts
 import { Provider, memoryStorage } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.create(
-  { projectId: "test", metadata, chains: evm(1) },
+  { projectId: "test", metadata, chains: [ethereumMainnet] },
   { session: fakeSession, storage: memoryStorage() },
 );
 ```

@@ -13,7 +13,7 @@ Konekt does not replace the WalletConnect protocol or relay network. It is an al
 
 Konekt improves the parts of the official client stack that make a wallet connection unnecessarily heavy or opaque:
 
-- **A real React app first-loads 10.75 kB with Konekt, against 145.74 kB for the official Ethereum Provider and 721.26 kB for AppKit.** Those are production Vite builds of matched apps in this repository, with React marked external.
+- **A real React app first-loads 10.94 kB with Konekt, against 145.74 kB for the official Ethereum Provider and 721.26 kB for AppKit.** Those are production Vite builds of matched apps in this repository, with React marked external.
 - **No `@walletconnect` runtime dependency.** Konekt owns a compact implementation instead of layering an EVM provider over Universal Provider, Sign Client, Core, utilities, storage, and UI packages.
 - **Pay only for what you import.** Chain adapters, HTTP reads, SIWE, server verification, and React UI are separate public entry points.
 - **Use the platform before a polyfill.** Web Crypto handles secure curves, hashing, and key derivation on modern browsers; compatibility implementations load only when an operation is unavailable.
@@ -25,18 +25,18 @@ Reown AppKit remains a different choice: it is a complete onboarding product wit
 
 ## Bundle comparison
 
-Package-main-bundle numbers understate the official stack. A production Vite React app that only connects Ethereum and shows an address transfers **10.75 kB** on first load with Konekt, **145.74 kB** with `@walletconnect/ethereum-provider@2.23.10`, **18.09 kB** with Konekt UI, and **721.26 kB** with `@reown/appkit@1.8.23`. After every lazy chunk is counted, those become **33.49 kB**, **538.06 kB**, **44.56 kB**, and **1079.28 kB**. React is marked external in all four builds.
+Package-main-bundle numbers understate the official stack. A production Vite React app that only connects Ethereum and shows an address transfers **10.94 kB** on first load with Konekt, **145.74 kB** with `@walletconnect/ethereum-provider@2.23.10`, **18.27 kB** with Konekt UI, and **721.26 kB** with `@reown/appkit@1.8.23`. After every lazy chunk is counted, those become **33.67 kB**, **538.06 kB**, **44.74 kB**, and **1079.28 kB**. React is marked external in all four builds.
 
 | Vite app | First load | Overall |
 | --- | ---: | ---: |
-| Konekt | **10.75 kB** | **33.49 kB** |
+| Konekt | **10.94 kB** | **33.67 kB** |
 | `@walletconnect/ethereum-provider@2.23.10` | **145.74 kB** | **538.06 kB** |
-| Konekt + `konekt-ui` | **18.09 kB** | **44.56 kB** |
+| Konekt + `konekt-ui` | **18.27 kB** | **44.74 kB** |
 | `@reown/appkit@1.8.23` + ethers adapter | **721.26 kB** | **1079.28 kB** |
 
-Headless Konekt is **92.6%** smaller on first load and **93.8%** smaller overall. With a wallet modal, Konekt is **97.5%** smaller on first load and **95.9%** smaller overall than AppKit. The four apps live in `packages/size-walletconnect`, `packages/size-appkit`, `packages/size-konekt`, and `packages/size-konekt-ui`. They share React 19 and Vite; the AppKit app turns email, socials, swaps, on-ramp, and analytics off.
+Headless Konekt is **92.5%** smaller on first load and **93.7%** smaller overall. With a wallet modal, Konekt is **97.5%** smaller on first load and **95.9%** smaller overall than AppKit. The four apps live in `packages/size-walletconnect`, `packages/size-appkit`, `packages/size-konekt`, and `packages/size-konekt-ui`. They share React 19 and Vite; the AppKit app turns email, socials, swaps, on-ramp, and analytics off.
 
-The library-only path is still **14.53 kB** through the first encrypted message (9.69 kB initially and a 4.84 kB lazy cipher chunk) plus **12.47 kB** for the wallet modal and styles, for a **27.00 kB** connect stack before React. That is the figure `pnpm size` enforces. The Vite table is what a browser actually downloads.
+The library-only path is still **14.74 kB** through the first encrypted message (9.90 kB initially and a 4.84 kB lazy cipher chunk) plus **12.47 kB** for the wallet modal and styles, for a **27.21 kB** connect stack before React. That is the figure `pnpm size` enforces. The Vite table is what a browser actually downloads.
 
 The [bundle size guide](../bundle-size/) documents both measurements. The [Konekt UI guide](../konekt-ui/) compares the UI packages directly, including wallet selection, pairing, account controls, theming, and the larger AppKit features Konekt intentionally leaves to the application.
 

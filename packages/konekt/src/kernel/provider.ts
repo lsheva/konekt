@@ -75,8 +75,8 @@ export type CreateProviderOptions<C extends readonly ChainInput[] = readonly Cha
   /** App name, description, URL, and icons shown by the wallet during approval. */
   metadata: Metadata;
   /**
-   * Chain objects returned by adapters such as `evm(1)` or `solana`. Arrays returned by adapters
-   * may be nested one level, for example `[evm(1, 8453), solana]`.
+   * Chain objects returned by factories such as `evm(1)` or named chains such as `solanaMainnet`,
+   * for example `[evm(1), evm(8453), solanaMainnet]`. Each factory call creates one chain.
    */
   chains: C;
   /** Optional proposal features such as `siwe()`. */
@@ -121,12 +121,12 @@ export type ProviderDeps = {
  * @example
  * ```ts
  * import { Provider } from "konekt";
- * import { evm } from "konekt/eip155";
+ * import { ethereumMainnet } from "konekt/eip155";
  *
  * const provider = await Provider.init({
  *   projectId,
  *   metadata,
- *   chains: evm(1),
+ *   chains: [ethereumMainnet],
  * });
  *
  * provider.on("display_uri", showPairingUri);
@@ -154,7 +154,9 @@ export class Provider {
    *
    * @returns The shared provider, extended with properties supplied by the configured adapters.
    */
-  static init<C extends readonly ChainInput[]>(opts: CreateProviderOptions<C>): Promise<Provider & ChainExtensions<C>> {
+  static init<const C extends readonly ChainInput[]>(
+    opts: CreateProviderOptions<C>,
+  ): Promise<Provider & ChainExtensions<C>> {
     Provider.#singleton ??= Provider.create(opts);
     return Provider.#singleton as Promise<Provider & ChainExtensions<C>>;
   }
@@ -167,7 +169,7 @@ export class Provider {
    *
    * @returns A new provider, extended with properties supplied by the configured adapters.
    */
-  static async create<C extends readonly ChainInput[]>(
+  static async create<const C extends readonly ChainInput[]>(
     opts: CreateProviderOptions<C>,
     deps: ProviderDeps = {},
   ): Promise<Provider & ChainExtensions<C>> {

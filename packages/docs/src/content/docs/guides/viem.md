@@ -35,9 +35,11 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: evm(mainnet.id, {
-    read: konektHttp(rpcUrl),
-  }),
+  chains: [
+    evm(mainnet, {
+      read: konektHttp(rpcUrl),
+    }),
+  ],
 });
 
 provider.on("display_uri", (uri) => {

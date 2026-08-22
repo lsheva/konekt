@@ -19,7 +19,7 @@ export function App() {
     void Provider.init({
       projectId,
       metadata,
-      chains: evm(1),
+      chains: [evm(1)],
     })
       .then((next) => {
         if (cancelled) return;

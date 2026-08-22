@@ -35,12 +35,12 @@ After:
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet, polygonMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1, 137),
+  chains: [ethereumMainnet, polygonMainnet],
 });
 
 provider.on("display_uri", (uri) => renderQrCode(uri));
@@ -54,8 +54,8 @@ Both return an EIP-1193 provider. `provider.request()`, `provider.enable()`, `pr
 | --- | --- | --- |
 | `projectId` | `projectId` | Unchanged. |
 | `metadata` | `metadata` | Unchanged. |
-| `optionalChains: [1, 137]` | `chains: evm(1, 137)` | `evm()` returns chain objects. Bare numbers are not accepted. |
-| `chains: [1]` | `chains: evm(1)` | Konekt has no required namespaces; see below. |
+| `optionalChains: [1, 137]` | `chains: [ethereumMainnet, polygonMainnet]` | Named chains, or `evm(id)` for the rest. Bare numbers are not accepted. |
+| `chains: [1]` | `chains: [ethereumMainnet]` | Konekt has no required namespaces; see below. |
 | `rpcMap: { 1: url }` | `evm(1, { read: http(url) })` | Per chain, and never automatic. |
 | `showQrModal: true` | `display_uri` event, or `konekt-ui` | See [Wallet UI](../wallet-ui/) and [konekt-ui](../konekt-ui/). |
 | `qrModalOptions` | `WalletModal` props | See [konekt-ui](../konekt-ui/). |

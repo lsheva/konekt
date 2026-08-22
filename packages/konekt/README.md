@@ -13,12 +13,12 @@ pnpm add konekt
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId,
   metadata: { name: "App", description: "My app", url: location.origin, icons: [] },
-  chains: evm(1),
+  chains: [ethereumMainnet],
 });
 
 provider.on("display_uri", showPairingUri);
@@ -31,7 +31,7 @@ small wagmi connector. For a React wallet picker and pairing QR, add
 
 ## Why konekt
 
-The modern-browser EVM path is 14.53 kB minified and gzipped through the first encrypted message,
+The modern-browser EVM path is 14.74 kB minified and gzipped through the first encrypted message,
 against 142.97 kB for the main bundle of `@walletconnect/ethereum-provider@2.23.10`. Reads go to a
 transport you configure rather than a default public endpoint, and the wallet UI is yours rather
 than a bundled modal. See
@@ -46,10 +46,10 @@ they use:
 | Import | Contents |
 | --- | --- |
 | `konekt` | `Provider`, session and error types, `memoryStorage` |
-| `konekt/eip155` | EVM chains through `evm(...ids, opts)` |
-| `konekt/solana` | `solana`, `solanaDevnet`, `solanaTestnet`, `solanaChain` |
-| `konekt/bip122` | `bitcoin`, `bitcoinTestnet`, `bitcoinSignet`, `bitcoinChain` |
-| `konekt/cosmos` | `cosmoshub`, `osmosis`, `cosmosChain` |
+| `konekt/eip155` | EVM chains through `evm(id, opts)`, named chains such as `ethereumMainnet` |
+| `konekt/solana` | `solanaMainnet`, `solanaDevnet`, `solanaTestnet`, `solana(ref)` |
+| `konekt/bip122` | `bitcoinMainnet`, `bitcoinTestnet`, `bitcoinSignet`, `bitcoin(ref)` |
+| `konekt/cosmos` | `cosmoshub`, `osmosis`, `cosmos(ref)` |
 | `konekt/generic` | `forwardingNamespace` for a custom namespace |
 | `konekt/siwe` | One-click authentication during pairing |
 | `konekt/cacao` | Server-side CACAO signature and claim verification |

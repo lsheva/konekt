@@ -9,7 +9,7 @@ This is a small TypeScript ESM library (`strict`, `exactOptionalPropertyTypes`, 
 - Apps: `Provider.init(opts)` — process singleton, sensible defaults (relay URL, storage).
 - Tests: `Provider.create(opts, deps?)` — a new instance every time. Inject `relay`, `session`, `seed`, or `storage` to swap internals. Do not open a real socket when `session` is injected.
 - Do not add `createProvider()` or any function that only forwards to a static method.
-- Chains are `Chain` objects from adapters you import: `chains: evm(1, 8453)` or `chains: [evm(1), stub]`. The kernel flattens one level. Do not pass numeric chain ids.
+- Chains are `Chain` objects from adapters you import: `chains: [ethereumMainnet, evm(8453)]` or `chains: [ethereumMainnet, stub]`. Factories create one chain per call; the kernel flattens one level. Do not pass numeric chain ids.
 - Features are optional hook objects on `features: [siwe(...)]`. They do not wrap `request()`. The seam is symmetric: a feature writes its own key under `Proposal.requests` and reads the matching key back off `Session.proposalRequestsResponses`. The kernel carries both containers without reading either, so adding a feature is not a kernel change.
 - `onProposal` is awaited before the proposal is published, so a feature may fetch a nonce. `onSettle` throwing rejects `connect()` and tears the session down; do not leave a settled session behind a failed connect.
 - Verification is not the browser's job. `konekt/siwe` asks for authentication and binds the answer to the session; `konekt/cacao` verifies signatures and is meant for the server that trusts the result.
@@ -26,9 +26,9 @@ Put a helper next to the concern it belongs to, not in the composer:
 | Plugin contracts (`Chain`, `ChainAdapter`, `Feature`, `Ctx`, `resolveChainId`) | `plugin.ts` |
 | EVM (chain id hex, CAIP accounts, method routing, `evm()`) | `chains/eip155.ts` |
 | Forward-everything namespaces (`forwardingNamespace`) | `chains/generic.ts` |
-| Solana (`solana` / `solanaChain`) | `chains/solana.ts` |
-| Bitcoin (`bitcoin` / `bitcoinChain`) | `chains/bip122.ts` |
-| Cosmos (`cosmoshub` / `osmosis` / `cosmosChain`) | `chains/cosmos.ts` |
+| Solana (`solana` / `solanaMainnet`) | `chains/solana.ts` |
+| Bitcoin (`bitcoin` / `bitcoinMainnet`) | `chains/bip122.ts` |
+| Cosmos (`cosmos` / `cosmoshub` / `osmosis`) | `chains/cosmos.ts` |
 | One-click auth request and session binding (`siwe`, `cacaosOf`) | `features/siwe.ts` |
 | CACAO message format and signature verification | `features/cacao.ts` |
 | JSON-RPC HTTP read transport | `http.ts` |

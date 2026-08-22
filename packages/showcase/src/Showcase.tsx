@@ -428,7 +428,7 @@ export const Showcase: React.FC = () => {
                   {evm && (
                     <div>
                       <dt>read</dt>
-                      <dd className="mono">{RPC_URL} (evm + http, kernel reads stay on mainnet)</dd>
+                      <dd className="mono">{RPC_URL} (mainnet) · derived public RPCs (sepolia, arbitrum)</dd>
                     </div>
                   )}
                 </dl>
@@ -796,7 +796,7 @@ export const Showcase: React.FC = () => {
 
           <section className="card">
             <h2>Kernel RPC reads</h2>
-            <p className="status">eip155 routeMethod rpc · chain.read via konekt/http · mainnet JSON-RPC</p>
+            <p className="status">eip155 routeMethod rpc · chain.read via konekt/http · per-chain public JSON-RPC</p>
             <div className="row">
               <button
                 className="btn method"

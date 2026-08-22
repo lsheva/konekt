@@ -1,8 +1,6 @@
 import type { Chain, Provider } from "konekt";
 import { RPC_URL, konektOptions } from "./Wagmi";
 
-const EVM_IDS = [1, 11155111, 42161] as const;
-
 export type PairKind = "evm" | "solana" | "bitcoin" | "cosmos";
 
 const NAMESPACE_OF: Record<PairKind, string> = {
@@ -12,19 +10,23 @@ const NAMESPACE_OF: Record<PairKind, string> = {
   cosmos: "cosmos",
 };
 
+/** The EVM chains mirror the wagmi config. Mainnet pins its RPC; the rest derive a public one from their definitions. */
+async function evmChains(): Promise<Chain[]> {
+  const { evm } = await import("konekt/eip155");
+  const { http } = await import("konekt/http");
+  const { mainnet, sepolia, arbitrum } = await import("viem/chains");
+  return [evm(mainnet, { read: http(RPC_URL) }), evm(sepolia), evm(arbitrum)];
+}
+
 async function chainsOf(kind: PairKind): Promise<Chain[]> {
-  if (kind === "evm") {
-    const { evm } = await import("konekt/eip155");
-    const { http } = await import("konekt/http");
-    return evm(...EVM_IDS, { read: http(RPC_URL) });
-  }
+  if (kind === "evm") return evmChains();
   if (kind === "solana") {
-    const { solana } = await import("konekt/solana");
-    return [solana];
+    const { solanaMainnet } = await import("konekt/solana");
+    return [solanaMainnet];
   }
   if (kind === "bitcoin") {
-    const { bitcoin } = await import("konekt/bip122");
-    return [bitcoin];
+    const { bitcoinMainnet } = await import("konekt/bip122");
+    return [bitcoinMainnet];
   }
   const { cosmoshub, osmosis } = await import("konekt/cosmos");
   return [cosmoshub, osmosis];
@@ -84,15 +86,13 @@ export async function openProvider(
 
 export async function restoreProvider(): Promise<Provider | undefined> {
   const { Provider } = await import("konekt");
-  const { evm } = await import("konekt/eip155");
-  const { http } = await import("konekt/http");
-  const { solana } = await import("konekt/solana");
-  const { bitcoin } = await import("konekt/bip122");
+  const { solanaMainnet } = await import("konekt/solana");
+  const { bitcoinMainnet } = await import("konekt/bip122");
   const { cosmoshub, osmosis } = await import("konekt/cosmos");
   const provider = await Provider.create({
     projectId: konektOptions.projectId,
     metadata: konektOptions.metadata,
-    chains: [evm(...EVM_IDS, { read: http(RPC_URL) }), solana, bitcoin, cosmoshub, osmosis],
+    chains: [await evmChains(), solanaMainnet, bitcoinMainnet, cosmoshub, osmosis],
     onDebug: konektOptions.onDebug,
     ttl: konektOptions.ttl,
   });
