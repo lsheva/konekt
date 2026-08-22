@@ -36,7 +36,7 @@
       "name": "Konekt",
       "package": "size-konekt",
       "versions": {
-        "konekt": "0.1.1"
+        "konekt": "0.2.0"
       },
       "firstLoad": {
         "raw": 31031,
@@ -51,7 +51,7 @@
       "name": "Konekt + UI",
       "package": "size-konekt-ui",
       "versions": {
-        "konekt": "0.1.1",
+        "konekt": "0.2.0",
         "konekt-ui": "0.1.1"
       },
       "firstLoad": {

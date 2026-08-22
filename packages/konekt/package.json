@@ -1,6 +1,6 @@
 {
   "name": "konekt",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Minimal, modular WalletConnect v2 provider",
   "license": "ISC",
   "author": "lsheva",

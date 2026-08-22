@@ -82,7 +82,7 @@
     "lint": "biome check ."
   },
   "peerDependencies": {
-    "konekt": ">=0.1.0",
+    "konekt": ">=0.2.0",
     "react": ">=19",
     "viem": ">=2",
     "wagmi": ">=3"
