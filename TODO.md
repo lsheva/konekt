@@ -1,6 +1,6 @@
 TODO:
 
-1. chains.md - maybe rename function evm -> eip, and do helpers for solana: , bip122:, and so on, and export specific chains like solanaMainnet, ethereumMainnet etc
+1. + chains.md - maybe rename function evm -> eip, and do helpers for solana: , bip122:, and so on, and export specific chains like solanaMainnet, ethereumMainnet etc
 
 2. maybe replace code errors with error instances with the same codes, use instances in docs
 
