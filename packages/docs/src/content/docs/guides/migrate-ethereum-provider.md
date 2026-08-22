@@ -165,6 +165,6 @@ Nothing changes structurally. Konekt is still the EIP-1193 provider you hand to 
 
 - viem: `custom(provider)` — see the [viem guide](../viem/);
 - ethers v6: `new BrowserProvider(provider)` — see the [ethers guide](../ethers/);
-- wagmi: a small application-owned connector — see the [wagmi guide](../wagmi/).
+- wagmi: the `konekt(options)` connector from `konekt-ui/wagmi` — see the [wagmi guide](../wagmi/).
 
 If you were using `@walletconnect/ethereum-provider` through wagmi’s built-in `walletConnect()` connector, replace that connector rather than the provider directly.

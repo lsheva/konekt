@@ -36,7 +36,7 @@ Package-main-bundle numbers understate the official stack. A production Vite Rea
 
 Headless Konekt is **92.6%** smaller on first load and **93.8%** smaller overall. With a wallet modal, Konekt is **97.5%** smaller on first load and **95.9%** smaller overall than AppKit. The four apps live in `packages/size-walletconnect`, `packages/size-appkit`, `packages/size-konekt`, and `packages/size-konekt-ui`. They share React 19 and Vite; the AppKit app turns email, socials, swaps, on-ramp, and analytics off.
 
-The library-only path is still **14.53 kB** through the first encrypted message (9.69 kB initially and a 4.84 kB lazy cipher chunk) plus **12.40 kB** for the wallet modal and styles, for a **26.93 kB** connect stack before React. That is the figure `pnpm size` enforces. The Vite table is what a browser actually downloads.
+The library-only path is still **14.53 kB** through the first encrypted message (9.69 kB initially and a 4.84 kB lazy cipher chunk) plus **12.47 kB** for the wallet modal and styles, for a **27.00 kB** connect stack before React. That is the figure `pnpm size` enforces. The Vite table is what a browser actually downloads.
 
 The [bundle size guide](../bundle-size/) documents both measurements. The [Konekt UI guide](../konekt-ui/) compares the UI packages directly, including wallet selection, pairing, account controls, theming, and the larger AppKit features Konekt intentionally leaves to the application.
 

@@ -21,7 +21,7 @@ These are production bundle measurements from the repository’s `pnpm size` che
 | `siwe` + `cacaosOf` | 844 B |
 | `verifyCacao` + `checkClaims` | 17.36 kB |
 | `solana` + `solanaChain` | 731 B |
-| `WalletModal` + `useProviderPairing` | 9.55 kB |
+| `WalletModal` + `useProviderPairing` | 9.62 kB |
 | wagmi `ConnectButton` | 11.02 kB |
 | `konekt-ui/styles.css` | 2.85 kB |
 
@@ -41,7 +41,7 @@ pnpm size
 
 ## Compared in a real Vite app
 
-The table above is each Konekt import on its own, without React. The headless path through the first encrypted message is 14.53 kB, the wallet modal and styles are 12.40 kB, and together they are a 26.93 kB connect stack. The numbers that show up in a browser are larger, and so is the gap versus the official stack, because `@walletconnect/ethereum-provider` and AppKit emit many extra chunks that package-main-bundle tools omit.
+The table above is each Konekt import on its own, without React. The headless path through the first encrypted message is 14.53 kB, the wallet modal and styles are 12.47 kB, and together they are a 27.00 kB connect stack. The numbers that show up in a browser are larger, and so is the gap versus the official stack, because `@walletconnect/ethereum-provider` and AppKit emit many extra chunks that package-main-bundle tools omit.
 
 Four matched React apps in this repository each connect Ethereum and show an address. They share Vite, React 19, and the same tiny shell. `react` and `react-dom` are marked external, so the totals are the wallet stack. The only other difference is which wallet library each app imports:
 
@@ -199,7 +199,7 @@ export function WalletArea(props: { projectId: string; provider: Provider }) {
 
 Bundlers such as Vite can place the component JavaScript and CSS in lazy chunks. Keep a visible loading state: downloading code after a click without feedback makes the interface appear broken.
 
-For wagmi, statically registering the small application connector is still the recommended path. The connector can dynamically import Konekt inside `getProvider()`, so registration itself does not load the provider or open a relay socket. See the [wagmi guide](../wagmi/).
+For wagmi, statically registering the `konekt-ui/wagmi` connector is still the recommended path. The connector dynamically imports Konekt inside `getProvider()`, so registration itself does not load the provider or open a relay socket. See the [wagmi guide](../wagmi/).
 
 ## What to optimize first
 

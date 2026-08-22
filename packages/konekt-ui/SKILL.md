@@ -70,10 +70,10 @@ import "konekt-ui/styles.css";
 <ConnectButton projectId={projectId} />;
 ```
 
-- The wagmi config must contain a Konekt connector whose `id` or `type` is `"konekt"`.
-- This package does not create the connector.
-- Prefer static registration in `createConfig()`. The connector can initialize `Provider` lazily,
-  so registration itself does not need to open a relay socket.
+- `konekt-ui/wagmi` exports the connector: register `konekt({ projectId, metadata })` in
+  `createConfig()`, and pass `abortPairing` as `onDismiss`. Its `id` and `type` are `"konekt"`.
+- Prefer static registration in `createConfig()`. The connector initializes `Provider` lazily,
+  so registration itself does not open a relay socket.
 - If the config omits it initially, pass `getWalletConnect: () => Promise<Connector>` to create and
   return it on demand. wagmi 3 has no public API for this; `config._internal.connectors.setup()` is
   the only way. Use it only when asked for on-demand registration, and say that it is private API.

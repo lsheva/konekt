@@ -123,7 +123,7 @@ Signing and transaction methods go to the wallet. Read-only JSON-RPC methods suc
 
 - [viem](../viem/) can wrap the provider with `custom()` for typed wallet actions and reads.
 - [ethers](../ethers/) can wrap the provider with `BrowserProvider` for Ethers v6 signers and reads.
-- [wagmi](../wagmi/) connects React state and hooks through a small application-owned connector.
+- [wagmi](../wagmi/) connects React state and hooks through the `konekt-ui/wagmi` connector.
 - [Solana](../solana/) and [CosmJS](../cosmjs/) use small application-owned bridges over namespace requests.
 
 ## Disconnect

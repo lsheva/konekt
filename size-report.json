@@ -46,8 +46,23 @@
   },
   {
     "name": "wagmi connect UI",
-    "size": 11018,
+    "size": 11019,
     "limit": 12500
+  },
+  {
+    "name": "wagmi connector",
+    "size": 1100,
+    "limit": 1300
+  },
+  {
+    "name": "Solana wallet discovery",
+    "size": 658,
+    "limit": 1000
+  },
+  {
+    "name": "Cosmos wallet discovery",
+    "size": 416,
+    "limit": 1000
   },
   {
     "name": "konekt-ui styles",
