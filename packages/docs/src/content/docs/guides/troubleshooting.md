@@ -46,7 +46,7 @@ These reject `connect()` or a pending request. Match on the message.
 | `proposal expired` | Nobody approved the pairing within `ttl.propose`, 5 minutes by default. | Show a fresh QR. Shorten `ttl.propose` if you want to expire abandoned QRs sooner. |
 | `request expired` | The wallet did not answer within `ttl.request`, 15 minutes by default. | Ask the user to open their wallet. `request_sent` gives you a URL to send them there. |
 | `disconnected` | The session ended while the request was pending. | Clear connected state and let the user reconnect. |
-| `UNSUPPORTED_CHAINS` | `chains` was empty. | Pass at least one `Chain`, as `chains: evm(1)` or `chains: [solana]`. |
+| `UNSUPPORTED_CHAINS` | `chains` was empty. | Pass at least one `Chain`, as `chains: [ethereumMainnet]` or `chains: [solanaMainnet]`. |
 | `Web Crypto unavailable` | The runtime exposes no Web Crypto. | Serve over HTTPS or `localhost`. Web Crypto is unavailable in insecure browser contexts. |
 
 An aborted connection is not in this table because it is not an error condition. `connect({ signal })` rejects with a `DOMException` named `AbortError` when you abort the controller. Handle it as a cancellation:
@@ -92,7 +92,7 @@ Reads need a transport. Wallet methods go to the wallet; JSON-RPC reads go to th
 import { http } from "konekt/http";
 import { evm } from "konekt/eip155";
 
-chains: evm(1, { read: http("https://ethereum.example-rpc.com") });
+chains: [evm(1, { read: http("https://ethereum.example-rpc.com") })];
 ```
 
 Configure `read` on every EVM chain you read from. See [Chains and networks](../chains/#add-json-rpc-reads).
@@ -127,12 +127,12 @@ Pass `onDebug` to see relay and protocol events without exposing payload content
 
 ```ts
 import { Provider } from "konekt";
-import { evm } from "konekt/eip155";
+import { ethereumMainnet } from "konekt/eip155";
 
 const provider = await Provider.init({
   projectId,
   metadata,
-  chains: evm(1),
+  chains: [ethereumMainnet],
   onDebug: (event) => console.log(event),
 });
 ```

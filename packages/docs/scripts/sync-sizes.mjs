@@ -19,7 +19,7 @@ const rows = [
   ["HTTP read transport", "`http`"],
   ["SIWE feature", "`siwe` + `cacaosOf`"],
   ["CACAO verifier", "`verifyCacao` + `checkClaims`"],
-  ["Solana adapter", "`solana` + `solanaChain`"],
+  ["Solana adapter", "`solana` + `solanaMainnet`"],
   ["Wallet modal", "`WalletModal` + `useProviderPairing`"],
   ["wagmi connect UI", "wagmi `ConnectButton`"],
   ["konekt-ui styles", "`konekt-ui/styles.css`"],

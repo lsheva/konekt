@@ -19,7 +19,7 @@ You are integrating **konekt**, a small browser client for WalletConnect v2. Thi
 These are the mistakes that compile, run, and then fail in production or leak. Check every generated integration against them.
 
 - Applications call `Provider.init(opts)`; it returns a process singleton and the first options win. Tests call `Provider.create(opts, deps?)`. Do not add `createProvider()` or any function that only forwards to a static method.
-- `chains` takes `Chain` objects from adapter subpaths (`evm(1, 8453)`, `[evm(1), solana]`), never bare numeric IDs, and there is no provider-level `rpcUrl`.
+- `chains` takes `Chain` objects from adapter subpaths (`[ethereumMainnet, evm(8453)]`, `[ethereumMainnet, solanaMainnet]`), never bare numeric IDs, and there is no provider-level `rpcUrl`.
 - JSON-RPC reads need an explicit `read` transport on the chain: `evm(1, { read: http(url) })`. Without one, a read throws `4200` rather than falling back to a public node.
 - Features are proposal hooks, not wrappers around `request()`. A feature writes its key under `Proposal.requests` and reads the matching key back from `Session.proposalRequestsResponses`.
 - Never make an authentication decision in the browser. `konekt/siwe` asks and binds; the server calls both `verifyCacao()` and `checkClaims()` from `konekt/cacao` with a single-use nonce it issued.

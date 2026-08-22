@@ -66,7 +66,7 @@ export type Chain<Ext = object> = {
   read?: ((req: RequestArguments) => Promise<unknown>) | undefined;
 };
 
-/** A single chain or one array of chains returned by an adapter helper such as `evm()`. */
+/** A single chain or one array of chains; the kernel flattens one level of nesting. */
 export type ChainInput = Chain | readonly Chain[];
 
 /** WalletConnect session proposal before it is published to the relay. */

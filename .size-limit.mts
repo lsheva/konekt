@@ -69,7 +69,7 @@ export default [
   {
     name: "Solana adapter",
     path: "packages/konekt/dist/chains/solana.js",
-    import: "{ solana, solanaChain }",
+    import: "{ solana, solanaMainnet }",
     limit: "900 B",
     gzip,
   },

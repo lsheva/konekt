@@ -9,7 +9,7 @@ The `bip122` adapter proposes the Bitcoin namespace and forwards its methods to 
 
 ```ts
 import { Provider } from "konekt";
-import { bitcoin } from "konekt/bip122";
+import { bitcoinMainnet } from "konekt/bip122";
 
 const provider = await Provider.init({
   projectId: "YOUR_PROJECT_ID",
@@ -19,7 +19,7 @@ const provider = await Provider.init({
     url: window.location.origin,
     icons: [new URL("/icon.png", window.location.origin).href],
   },
-  chains: [bitcoin],
+  chains: [bitcoinMainnet],
 });
 
 // Render this as a QR code. See the Wallet UI guide.
@@ -33,22 +33,22 @@ provider.on("request_sent", ({ url }) => {
 if (!provider.connected) await provider.connect();
 ```
 
-`chains` always takes an array, so a single Bitcoin chain is `[bitcoin]`.
+`chains` always takes an array, so a single Bitcoin chain is `[bitcoinMainnet]`.
 
 | Export | CAIP-2 ID |
 | --- | --- |
-| `bitcoin` | `bip122:000000000019d6689c085ae165831e93` |
+| `bitcoinMainnet` | `bip122:000000000019d6689c085ae165831e93` |
 | `bitcoinTestnet` | `bip122:000000000933ea01ad0ee984209779ba` |
 | `bitcoinSignet` | `bip122:00000008819873e925422c1ff0f99f7c` |
 
-The reference is the genesis block hash prefix. Build another network with `bitcoinChain(reference)`.
+The reference is the genesis block hash prefix. Build another network with `bitcoin(reference)`.
 
 ## Read the approved addresses
 
 Approved addresses are grouped by CAIP-2 ID. A wallet can approve a session without a Bitcoin account, so check before using one:
 
 ```ts
-const [address] = provider.accountsByChain[bitcoin.id] ?? [];
+const [address] = provider.accountsByChain[bitcoinMainnet.id] ?? [];
 if (!address) throw new Error("The wallet approved no Bitcoin account");
 ```
 
@@ -100,9 +100,9 @@ provider.on("message", ({ type, data }) => {
 Configure every network you use, then target one request without moving the active chain:
 
 ```ts
-import { bitcoin, bitcoinTestnet } from "konekt/bip122";
+import { bitcoinMainnet, bitcoinTestnet } from "konekt/bip122";
 
-// chains: [bitcoin, bitcoinTestnet]
+// chains: [bitcoinMainnet, bitcoinTestnet]
 const result = await provider.request(
   { method: "getAccountAddresses" },
   bitcoinTestnet.id,

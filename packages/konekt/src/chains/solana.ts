@@ -1,3 +1,4 @@
+import type { Chain } from "../kernel/plugin.ts";
 import { forwardingNamespace } from "./generic.ts";
 
 /** Solana methods proposed and forwarded by the built-in adapter. */
@@ -12,14 +13,22 @@ export const METHODS = [
 
 const { adapter, chain } = forwardingNamespace({ namespace: "solana", methods: METHODS });
 
-/** Shared adapter for chains created by {@link solanaChain}. */
+/** Shared adapter for chains created by {@link solana}. */
 export const solanaAdapter = adapter;
-/** Creates a Solana chain from its CAIP-2 reference, usually the network's genesis hash. */
-export const solanaChain = chain;
+
+/**
+ * Creates one Solana `Chain` for {@link Provider} configuration.
+ *
+ * Pass a CAIP-2 reference (usually the network's genesis hash) or a network definition with a
+ * string `id`, such as AppKit's Solana networks.
+ */
+export function solana(ref: string | { id: string }): Chain {
+  return chain(typeof ref === "string" ? ref : ref.id);
+}
 
 /** Solana mainnet-beta. */
-export const solana = solanaChain("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp");
+export const solanaMainnet = chain("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp");
 /** Solana devnet. */
-export const solanaDevnet = solanaChain("EtWTRABZaYq6iMfeYKouRu166VU2xqa1");
+export const solanaDevnet = chain("EtWTRABZaYq6iMfeYKouRu166VU2xqa1");
 /** Solana testnet. */
-export const solanaTestnet = solanaChain("4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z");
+export const solanaTestnet = chain("4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z");

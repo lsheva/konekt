@@ -10,7 +10,7 @@ The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Pr
 :::
 
 :::tip[About 97% smaller than AppKit in a real app]
-A Vite React app with Konekt UI first-loads **18.05 kB** and totals **44.52 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.9%** smaller overall. React is marked external in both builds. The modal itself is **12.40 kB**.
+A Vite React app with Konekt UI first-loads **18.23 kB** and totals **44.70 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.9%** smaller overall. React is marked external in both builds. The modal itself is **12.40 kB**.
 :::
 
 Choose an entry point:
@@ -28,7 +28,7 @@ Konekt UI is better when the app needs a wallet picker, pairing QR, and account 
 
 | UI path | First load | Overall |
 | --- | ---: | ---: |
-| Vite app with Konekt `WalletModal` | **18.05 kB** | **44.52 kB** |
+| Vite app with Konekt `WalletModal` | **18.23 kB** | **44.70 kB** |
 | Vite app with `@reown/appkit@1.8.23` | **721.26 kB** | **1079.28 kB** |
 
 Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.40 kB** (9.55 kB JavaScript and 2.85 kB CSS); the wagmi `ConnectButton` path is **13.87 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.

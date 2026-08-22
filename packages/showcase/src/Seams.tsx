@@ -72,26 +72,26 @@ export const Seams: React.FC = () => {
       setHookLog([]);
 
       if (evmOn) {
-        const { evm } = await import("konekt/eip155");
+        const { ethereumMainnet, evm } = await import("konekt/eip155");
         modules.push("konekt/eip155");
         if (httpOn) {
           const { http } = await import("konekt/http");
           modules.push("konekt/http");
           chains.push(evm(1, { read: http(RPC_URL) }));
         } else {
-          chains.push(evm(1));
+          chains.push(ethereumMainnet);
         }
       }
       if (stubOn) chains.push(stub());
       if (solanaOn) {
-        const { solana } = await import("konekt/solana");
+        const { solanaMainnet } = await import("konekt/solana");
         modules.push("konekt/solana");
-        chains.push(solana);
+        chains.push(solanaMainnet);
       }
       if (bitcoinOn) {
-        const { bitcoin } = await import("konekt/bip122");
+        const { bitcoinMainnet } = await import("konekt/bip122");
         modules.push("konekt/bip122");
-        chains.push(bitcoin);
+        chains.push(bitcoinMainnet);
       }
       if (hooksOn) {
         features.push(hooks((name, value) => setHookLog((prev) => [...prev, `${name} ${pretty(value)}`])));
