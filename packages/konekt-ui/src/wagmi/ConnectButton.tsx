@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Connector } from "wagmi";
-import { useChains, useConnection } from "wagmi";
+import { useAccount, useChains } from "wagmi";
 import { avatarGradient, truncateAddress } from "../address.ts";
 import { themeAttribute, uiClass, type WcAppearanceProps } from "../appearance.ts";
 import type { WalletFilter } from "../explorer.ts";
@@ -47,7 +47,7 @@ export function ConnectButton({
   unstyled,
 }: ConnectButtonProps) {
   const pairing = useWagmiPairing({ getWalletConnect, projectId });
-  const { address, isConnected, chainId } = useConnection();
+  const { address, isConnected, chainId } = useAccount();
   const configured = useChains();
   const [walletOpen, setWalletOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);

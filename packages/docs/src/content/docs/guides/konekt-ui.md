@@ -22,7 +22,7 @@ Choose an entry point:
 | `konekt-ui/wallet-standard` | Your Solana app should list injected extensions (Phantom, Solflare, Backpack) next to WalletConnect pairing. |
 | `konekt-ui/cosmos` | Your Cosmos app should list Keplr-API extensions (Keplr, Leap) next to WalletConnect pairing. |
 
-The components require React 19 or newer. The wagmi entry point also requires wagmi 3 and viem 2; the wallet-standard and cosmos entry points need only React.
+The components require React 18 or newer. The wagmi entry point also requires wagmi 2 or 3 and viem 2; the wallet-standard and cosmos entry points need only React.
 
 ## Konekt UI vs Reown AppKit
 
@@ -206,7 +206,7 @@ Each source owns its wallets: the modal routes a clicked wallet back to the sour
 
 ## wagmi
 
-Install the optional peers:
+Install the optional peers (React 18+, wagmi 2 or 3, viem 2):
 
 ```sh
 pnpm add konekt konekt-ui react viem wagmi

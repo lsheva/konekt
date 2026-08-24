@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formatUnits } from "viem";
-import { useBalance, useChains, useConnection, useDisconnect, useSwitchChain } from "wagmi";
+import { useAccount, useBalance, useChains, useDisconnect, useSwitchChain } from "wagmi";
 import { avatarGradient, truncateAddress } from "../address.ts";
 import { uiClass, type WcAppearanceProps } from "../appearance.ts";
 import { Icon } from "../Icon.tsx";
@@ -31,7 +31,7 @@ function formattedBalance(value: bigint, decimals: number, symbol: string): stri
  * `switchChain` action while keeping the wallet connected.
  */
 export function AccountModal({ open, view, onClose, onView, className, style, theme, unstyled }: AccountModalProps) {
-  const { address, chainId } = useConnection();
+  const { address, chainId } = useAccount();
   const { disconnect } = useDisconnect();
   const chains = useChains();
   const switching = useSwitchChain();

@@ -7,7 +7,7 @@ description: >
 
 # konekt-ui
 
-React 19 UI for `konekt`. Import `konekt-ui/styles.css` once unless every component is `unstyled`.
+React 18+ UI for `konekt`. Import `konekt-ui/styles.css` once unless every component is `unstyled`.
 
 ## Provider (any chain)
 
@@ -72,13 +72,14 @@ import "konekt-ui/styles.css";
 
 - `konekt-ui/wagmi` exports the connector: register `konekt({ projectId, metadata })` in
   `createConfig()`, and pass `abortPairing` as `onDismiss`. Its `id` and `type` are `"konekt"`.
+  The entry works with wagmi 2 and 3.
 - The button reads the project ID from the registered connector; do not pass a `projectId` prop
   unless the connector is created lazily.
 - Prefer static registration in `createConfig()`. The connector initializes `Provider` lazily,
   so registration itself does not open a relay socket.
 - If the config omits it initially, pass `getWalletConnect: () => Promise<Connector>` to create and
   return it on demand, plus `projectId` so the wallet list loads before the connector exists.
-  wagmi 3 has no public API for this; `config._internal.connectors.setup()` is
+  wagmi has no public API for this; `config._internal.connectors.setup()` is
   the only way. Use it only when asked for on-demand registration, and say that it is private API.
 - Pass `onDismiss` when connector-owned pairing work also needs cancellation.
 - Use `useWagmiPairing` for a custom trigger with `WalletModal`.

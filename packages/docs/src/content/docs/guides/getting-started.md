@@ -19,7 +19,7 @@ This is the smallest amount of code to a working connection, and also the smalle
 
 You need:
 
-- a React 19 app—`pnpm create vite my-app --template react-ts` works;
+- a React 18 or 19 app—`pnpm create vite my-app --template react-ts` works;
 - a free project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/);
 - a wallet app that supports WalletConnect v2, such as MetaMask, Rainbow, or Trust Wallet, usually on your phone.
 
@@ -29,7 +29,7 @@ You need:
 pnpm add konekt konekt-ui wagmi viem @tanstack/react-query
 ```
 
-You can use `npm install` or `yarn add` instead.
+You can use `npm install` or `yarn add` instead. `konekt-ui` works with React 18 or 19; the wagmi packages can be v2 or v3. The snippets use hook names both wagmi versions export (`useAccount`, `connect`).
 
 ## 2. Describe your app and networks
 
@@ -126,19 +126,19 @@ Once connected, the wallet behaves like any other wagmi connection. Every wagmi 
 
 ```tsx
 import { formatUnits } from "viem";
-import { useBalance, useConnection } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 
 export function Account() {
-  const connection = useConnection();
-  const balance = useBalance({ address: connection.address });
+  const account = useAccount();
+  const balance = useBalance({ address: account.address });
 
-  if (!connection.isConnected || !connection.address) {
+  if (!account.isConnected || !account.address) {
     return <p>No wallet connected.</p>;
   }
 
   return (
     <section>
-      <p>{connection.address}</p>
+      <p>{account.address}</p>
       {balance.data && (
         <p>
           {formatUnits(balance.data.value, balance.data.decimals)} {balance.data.symbol}

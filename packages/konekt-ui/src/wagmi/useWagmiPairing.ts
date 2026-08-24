@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Connector } from "wagmi";
-import { useConnect, useConnection, useConnectors } from "wagmi";
+import { useAccount, useConnect, useConnectors } from "wagmi";
 import type { LocalWallet, Pairing } from "../WalletModal.tsx";
 
 const KONEKT = "konekt";
@@ -41,8 +41,8 @@ function toLocalWallet(connector: Connector): LocalWallet {
  */
 export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOptions = {}): Pairing {
   const connectors = useConnectors();
-  const { mutate, reset: resetConnect, error: connectError } = useConnect();
-  const { isConnected } = useConnection();
+  const { connect, reset: resetConnect, error: connectError } = useConnect();
+  const { isConnected } = useAccount();
   const [error, setError] = useState<string>();
 
   const latest = useRef(connectors);
@@ -53,9 +53,9 @@ export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOpt
   const connectLocal = useCallback(
     (wallet: LocalWallet) => {
       const connector = latest.current.find((c) => c.uid === wallet.id);
-      if (connector) mutate({ connector });
+      if (connector) connect({ connector });
     },
-    [mutate],
+    [connect],
   );
 
   const start = useCallback(
@@ -69,7 +69,7 @@ export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOpt
         if (cancelled) return;
         wc.emitter.on("message", onMessage);
         stop = () => wc.emitter.off("message", onMessage);
-        mutate({ connector: wc });
+        connect({ connector: wc });
       };
 
       setError(undefined);
@@ -86,7 +86,7 @@ export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOpt
         stop();
       };
     },
-    [getWalletConnect, mutate],
+    [connect, getWalletConnect],
   );
 
   const reset = useCallback(() => {
