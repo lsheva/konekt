@@ -108,10 +108,25 @@ Two details carry the whole design:
 
 On a phone there is nothing to scan, so a tapped wallet should open directly: `walletHref(listing, uri)` builds the deep link from a listing and the pairing URI, `openWalletLink()` navigates to it, and `isMobile()` tells you which presentation to prefer.
 
+A connected account chip is `Avatar` plus `truncateAddress`:
+
+```tsx
+import { Avatar, truncateAddress } from "konekt-ui";
+
+<button type="button">
+  <Avatar address={address} />
+  {truncateAddress(address)}
+</button>
+```
+
+`Avatar` defaults to 28 CSS pixels, the size of the connect bar chip. Pass `size={64}` for the larger disc in an account dialog.
+
 | Export | From | Purpose |
 | --- | --- | --- |
 | `Modal` | `konekt-ui` | Accessible dialog shell. |
 | `QrCode` | `konekt-ui` | Renders a pairing URI. Takes `value` and an optional `size`. |
+| `Avatar` | `konekt-ui` | Address-derived gradient disc. Takes `address` and an optional `size`. |
+| `truncateAddress` | `konekt-ui` | Shortens a hex address for a chip or heading. |
 | `fetchWallets` | `konekt-ui` | Queries the WalletConnect Explorer, one page at a time. |
 | `filterWallets` | `konekt-ui` | Applies `include`, `exclude`, and `featured` to listings. |
 | `FEATURED_WALLET_IDS` | `konekt-ui` | The default featured Explorer IDs. |

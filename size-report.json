@@ -41,12 +41,12 @@
   },
   {
     "name": "Wallet modal",
-    "size": 9706,
+    "size": 9831,
     "limit": 11000
   },
   {
     "name": "wagmi connect UI",
-    "size": 11121,
+    "size": 11278,
     "limit": 12500
   },
   {
@@ -66,7 +66,7 @@
   },
   {
     "name": "konekt-ui styles",
-    "size": 2854,
+    "size": 2937,
     "limit": 3500
   }
 ]

@@ -13,7 +13,7 @@ Three packages share the work, and each does one job:
 | `konekt-ui` | Renders the connect button, wallet picker, and pairing QR. |
 | `wagmi` | Keeps account, chain, and balance state in React hooks. |
 
-This is the smallest amount of code to a working connection, and also the smallest download: this stack first-loads **18.36 kB** in a production Vite app, where AppKit first-loads **721.26 kB**. You do not need to care about that yet—it simply means there is no penalty for starting the easy way.
+This is the smallest amount of code to a working connection, and also the smallest download: this stack first-loads **18.54 kB** in a production Vite app, where AppKit first-loads **721.26 kB**. You do not need to care about that yet—it simply means there is no penalty for starting the easy way.
 
 ## Before you start
 

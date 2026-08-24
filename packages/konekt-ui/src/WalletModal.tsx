@@ -135,6 +135,15 @@ function WalletCard({ name, imageUrl, onClick, unstyled }: WalletEntryProps) {
   );
 }
 
+function WalletRowSkeleton({ unstyled }: { unstyled?: boolean | undefined }) {
+  return (
+    <div className={uiClass("kui-row kui-row-skeleton", unstyled)} data-kui-slot="wallet-skeleton" aria-hidden="true">
+      <span className={uiClass("kui-row-icon kui-skeleton-block", unstyled)} />
+      <span className={uiClass("kui-skeleton-line", unstyled)} />
+    </div>
+  );
+}
+
 /**
  * Wallet picker and WalletConnect pairing dialog.
  *
@@ -172,6 +181,7 @@ export function WalletModal({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string>();
   const [copiedUri, setCopiedUri] = useState(false);
+  const [featuredReady, setFeaturedReady] = useState(false);
   const opened = useRef<string | undefined>(undefined);
 
   const chainKey = idKey(chains ?? pairing.chains);
@@ -204,6 +214,7 @@ export function WalletModal({
     if (!open) return;
     if (!projectId) {
       setError(NO_PROJECT_ID);
+      setFeaturedReady(true);
       return;
     }
     let cancelled = false;
@@ -215,6 +226,9 @@ export function WalletModal({
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setFeaturedReady(true);
       });
     return () => {
       cancelled = true;
@@ -279,7 +293,9 @@ export function WalletModal({
     openWalletLink(href);
   }, [uri, selected]);
 
+  const featuredIds = idList(featuredKey) ?? [];
   const featuredOnly = featured.filter((w) => !localFor(w, local));
+  const showFeaturedSkeletons = !featuredReady && featured.length === 0 && featuredIds.length > 0;
 
   const pickWallet = (wallet: ExplorerWallet) => {
     const match = localFor(wallet, local);
@@ -368,7 +384,11 @@ export function WalletModal({
         )}
 
         {view === "home" && (
-          <div className={uiClass("kui-list", unstyled)} data-kui-slot="wallet-list">
+          <div
+            className={uiClass("kui-list", unstyled)}
+            data-kui-slot="wallet-list"
+            aria-busy={featuredReady ? undefined : true}
+          >
             <button
               type="button"
               className={uiClass("kui-row", unstyled)}
@@ -397,15 +417,17 @@ export function WalletModal({
                 }}
               />
             ))}
-            {featuredOnly.map((w) => (
-              <WalletRow
-                key={w.id}
-                name={w.name}
-                imageUrl={w.imageUrl}
-                unstyled={unstyled}
-                onClick={() => pickWallet(w)}
-              />
-            ))}
+            {showFeaturedSkeletons
+              ? featuredIds.map((id) => <WalletRowSkeleton key={id} unstyled={unstyled} />)
+              : featuredOnly.map((w) => (
+                  <WalletRow
+                    key={w.id}
+                    name={w.name}
+                    imageUrl={w.imageUrl}
+                    unstyled={unstyled}
+                    onClick={() => pickWallet(w)}
+                  />
+                ))}
             <button
               type="button"
               className={uiClass("kui-row", unstyled)}

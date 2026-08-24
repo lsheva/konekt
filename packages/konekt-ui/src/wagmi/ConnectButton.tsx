@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { Connector } from "wagmi";
 import { useAccount, useChains } from "wagmi";
-import { avatarGradient, truncateAddress } from "../address.ts";
+import { Avatar } from "../Avatar.tsx";
+import { truncateAddress } from "../address.ts";
 import { themeAttribute, uiClass, type WcAppearanceProps } from "../appearance.ts";
 import type { WalletFilter } from "../explorer.ts";
 import { WalletModal } from "../WalletModal.tsx";
@@ -118,11 +119,7 @@ export function ConnectButton({
             setAccountOpen(true);
           }}
         >
-          <span
-            className={uiClass("kui-mini-avatar", unstyled)}
-            style={{ background: avatarGradient(address) }}
-            aria-hidden="true"
-          />
+          <Avatar address={address} unstyled={unstyled} />
           {truncateAddress(address)}
         </button>
       </div>

@@ -83,6 +83,8 @@ import "konekt-ui/styles.css";
   the only way. Use it only when asked for on-demand registration, and say that it is private API.
 - Pass `onDismiss` when connector-owned pairing work also needs cancellation.
 - Use `useWagmiPairing` for a custom trigger with `WalletModal`.
+- `Avatar` is the address-derived disc; `truncateAddress` shortens a hex address. Use both for a
+  custom account chip.
 
 ## Lazy loading
 

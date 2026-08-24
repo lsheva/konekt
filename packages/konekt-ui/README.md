@@ -5,7 +5,7 @@
 
 Connect UI for [`konekt`](https://www.npmjs.com/package/konekt). Two entry points:
 
-- `konekt-ui` — `WalletModal`, `useProviderPairing`, `Modal`, `QrCode`, the explorer client. Any namespace, no wagmi.
+- `konekt-ui` — `WalletModal`, `useProviderPairing`, `Modal`, `QrCode`, `Avatar`, the explorer client. Any namespace, no wagmi.
 - `konekt-ui/wagmi` — `ConnectButton`, `AccountModal`, `useWagmiPairing`. EVM, through a wagmi config.
 
 The theme is a plain stylesheet: `import "konekt-ui/styles.css"`.

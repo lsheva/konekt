@@ -1,3 +1,5 @@
+export { Avatar, type AvatarProps } from "./Avatar.tsx";
+export { truncateAddress } from "./address.ts";
 export type {
   WcAppearanceProps,
   WcStyle,
