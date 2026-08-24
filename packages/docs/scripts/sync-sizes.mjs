@@ -39,7 +39,7 @@ const citations = {
   "bundle-size.md": ["headless", "modal", "stack"],
   "why-konekt.md": ["headless", "modal", "stack"],
   "konekt-ui.md": ["modal", "wagmiUi"],
-  "getting-started.md": ["headless"],
+  "vanilla.md": ["headless"],
 };
 
 const appCitations = {
@@ -72,7 +72,8 @@ const appCitations = {
     "uiOverallPct",
   ],
   "konekt-ui.md": ["konektUiFirst", "konektUiOverall", "appkitFirst", "appkitOverall", "uiFirstPct", "uiOverallPct"],
-  "getting-started.md": ["konektFirst", "wcFirst"],
+  "getting-started.md": ["konektUiFirst", "appkitFirst"],
+  "vanilla.md": ["konektFirst", "wcFirst"],
 };
 
 // Round on bytes: (2955 / 1000).toFixed(2) is "2.95" because 2.955 is not exact in binary.

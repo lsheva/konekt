@@ -10,7 +10,7 @@ The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Pr
 :::
 
 :::tip[About 97% smaller than AppKit in a real app]
-A Vite React app with Konekt UI first-loads **18.27 kB** and totals **44.74 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.9%** smaller overall. React is marked external in both builds. The modal itself is **12.47 kB**.
+A Vite React app with Konekt UI first-loads **18.36 kB** and totals **44.83 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.8%** smaller overall. React is marked external in both builds. The modal itself is **12.56 kB**.
 :::
 
 Choose an entry point:
@@ -30,10 +30,10 @@ Konekt UI is better when the app needs a wallet picker, pairing QR, and account 
 
 | UI path | First load | Overall |
 | --- | ---: | ---: |
-| Vite app with Konekt `WalletModal` | **18.27 kB** | **44.74 kB** |
+| Vite app with Konekt `WalletModal` | **18.36 kB** | **44.83 kB** |
 | Vite app with `@reown/appkit@1.8.23` | **721.26 kB** | **1079.28 kB** |
 
-Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.47 kB** (9.62 kB JavaScript and 2.85 kB CSS); the wagmi `ConnectButton` path is **13.87 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
+Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.56 kB** (9.71 kB JavaScript and 2.85 kB CSS); the wagmi `ConnectButton` path is **13.98 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
 
 | Capability | Konekt UI | Reown AppKit |
 | --- | --- | --- |
@@ -72,12 +72,7 @@ import type { Provider } from "konekt";
 import { useProviderPairing, WalletModal } from "konekt-ui";
 import "konekt-ui/styles.css";
 
-type WalletConnectionProps = {
-  provider: Provider;
-  projectId: string;
-};
-
-export function WalletConnection({ provider, projectId }: WalletConnectionProps) {
+export function WalletConnection({ provider }: { provider: Provider }) {
   const [open, setOpen] = useState(false);
   const pairing = useProviderPairing(provider);
 
@@ -88,7 +83,6 @@ export function WalletConnection({ provider, projectId }: WalletConnectionProps)
       </button>
       <WalletModal
         open={open}
-        projectId={projectId}
         pairing={pairing}
         onClose={() => setOpen(false)}
       />
@@ -97,7 +91,7 @@ export function WalletConnection({ provider, projectId }: WalletConnectionProps)
 }
 ```
 
-Use the same WalletConnect project ID for the provider and modal. The modal sends it to the WalletConnect Explorer when loading wallet listings.
+The pairing carries the provider’s WalletConnect project ID, and the modal sends it to the WalletConnect Explorer when loading wallet listings — there is no separate ID to pass.
 
 ### What the modal does on its own
 
@@ -118,8 +112,7 @@ On its own, the provider adapter lists WalletConnect Explorer wallets and the ge
 | Prop | Type | Purpose |
 | --- | --- | --- |
 | `open` | `boolean` | Whether the dialog renders. Required. |
-| `projectId` | `string` | Explorer queries. Required, and the same ID as the provider. |
-| `pairing` | `Pairing` | From `useProviderPairing()` or `useWagmiPairing()`. Required. |
+| `pairing` | `Pairing` | From `useProviderPairing()` or `useWagmiPairing()`. Required. Carries the project ID for Explorer queries. |
 | `onClose` | `() => void` | Asks the parent to set `open` to `false`. Required. |
 | `chains` | `readonly string[]` | CAIP-2 IDs used to filter Explorer results. Defaults to the provider’s chains. |
 | `wallets` | `WalletFilter` | `include`, `exclude`, and `featured` Explorer IDs. |
@@ -151,7 +144,7 @@ import { useProviderPairing, WalletModal } from "konekt-ui";
 import { type CosmosInjectedWallet, useCosmosSource } from "konekt-ui/cosmos";
 import { useWalletStandardSource, type WalletStandardWallet } from "konekt-ui/wallet-standard";
 
-export function MultiChainConnection({ provider, projectId }: { provider: Provider; projectId: string }) {
+export function MultiChainConnection({ provider }: { provider: Provider }) {
   const [open, setOpen] = useState(false);
   const [solanaWallet, setSolanaWallet] = useState<WalletStandardWallet>();
   const [cosmosWallet, setCosmosWallet] = useState<CosmosInjectedWallet>();
@@ -165,7 +158,7 @@ export function MultiChainConnection({ provider, projectId }: { provider: Provid
       <button type="button" onClick={() => setOpen(true)}>
         Connect wallet
       </button>
-      <WalletModal open={open} projectId={projectId} pairing={pairing} onClose={() => setOpen(false)} />
+      <WalletModal open={open} pairing={pairing} onClose={() => setOpen(false)} />
       {solanaWallet && <p>Solana: {solanaWallet.accounts[0]?.address}</p>}
       {cosmosWallet && <p>Cosmos wallet enabled.</p>}
     </>
@@ -229,8 +222,8 @@ pnpm add konekt konekt-ui react viem wagmi
 import { ConnectButton } from "konekt-ui/wagmi";
 import "konekt-ui/styles.css";
 
-export function WalletControls({ projectId }: { projectId: string }) {
-  return <ConnectButton projectId={projectId} />;
+export function WalletControls() {
+  return <ConnectButton />;
 }
 ```
 
@@ -240,17 +233,17 @@ The wagmi entry point also exports the connector: register `konekt(options)` fro
 
 | Prop | Type | Purpose |
 | --- | --- | --- |
-| `projectId` | `string` | Explorer queries. Required. |
 | `chains` | `readonly string[]` | CAIP-2 IDs for wallet filtering. Defaults to the configured wagmi chains. |
 | `wallets` | `WalletFilter` | `include`, `exclude`, and `featured` Explorer IDs. |
 | `getWalletConnect` | `() => Promise<Connector>` | Supplies the Konekt connector when the wagmi config does not already contain one. |
+| `projectId` | `string` | Explorer queries, only with `getWalletConnect` — a registered Konekt connector supplies its own. |
 | `onDismiss` | `() => void` | Cancels connector-owned pairing work when the user closes the modal. |
 
 It also accepts the shared `theme`, `className`, `style`, and `unstyled` props.
 
 Three of these cover the less common cases:
 
-- `getWalletConnect` is a `ConnectButton` prop (and a `useWagmiPairing()` option) that returns the WalletConnect connector on demand, for apps that keep it out of `createConfig()` so a visitor who never connects never loads Konekt. See the [wagmi guide](../wagmi/#static-and-lazy-connector-registration) for the trade-off it carries.
+- `getWalletConnect` is a `ConnectButton` prop (and a `useWagmiPairing()` option) that returns the WalletConnect connector on demand, for apps that keep it out of `createConfig()` so a visitor who never connects never loads Konekt. Pass `projectId` alongside it, because there is no registered connector to read the ID from until pairing starts. See the [wagmi guide](../wagmi/#static-and-lazy-connector-registration) for the trade-off it carries.
 - `onDismiss` runs when the user closes the modal, so connector-owned work can be cancelled alongside the pairing.
 - `useWagmiPairing()` gives you the same pairing state without `ConnectButton`, for a custom trigger rendered with `WalletModal`.
 
@@ -267,14 +260,13 @@ import { useProviderPairing, WalletModal } from "konekt-ui";
 const featuredWalletIds = ["…", "…"];
 const hiddenWalletIds = ["…"];
 
-export function WalletPicker({ provider, projectId }: { provider: Provider; projectId: string }) {
+export function WalletPicker({ provider }: { provider: Provider }) {
   const [open, setOpen] = useState(false);
   const pairing = useProviderPairing(provider);
 
   return (
     <WalletModal
       open={open}
-      projectId={projectId}
       pairing={pairing}
       onClose={() => setOpen(false)}
       chains={["eip155:1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"]}
@@ -303,7 +295,6 @@ Override design tokens through `style`:
 ```tsx ignore
 <WalletModal
   open={open}
-  projectId={projectId}
   pairing={pairing}
   onClose={() => setOpen(false)}
   theme="dark"

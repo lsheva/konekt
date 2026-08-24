@@ -105,7 +105,7 @@ import { useProviderPairing, WalletModal } from "konekt-ui";
 import "konekt-ui/styles.css";
 import { useKonekt } from "./useKonekt";
 
-export function ConnectWallet({ projectId }: { projectId: string }) {
+export function ConnectWallet() {
   const provider = useKonekt();
   const pairing = useProviderPairing(provider);
   const [open, setOpen] = useState(false);
@@ -117,7 +117,6 @@ export function ConnectWallet({ projectId }: { projectId: string }) {
       </button>
       <WalletModal
         open={open}
-        projectId={projectId}
         pairing={pairing}
         onClose={() => setOpen(false)}
       />

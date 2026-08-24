@@ -1,160 +1,171 @@
 ---
 title: Getting started
-description: Install konekt, create a provider, show a pairing QR, and make your first wallet request.
+description: Add a wallet connect button to a React app with konekt, konekt-ui, and wagmi.
 ---
 
-Konekt connects a browser app to wallets that support WalletConnect v2. Your app creates a provider, shows a QR code or wallet link, and then sends requests through the approved connection.
+By the end of this page, your React app has a **Connect wallet** button. Clicking it opens a wallet picker with a QR code, the user approves the connection in a wallet on their phone, and your app can show their address and send transactions.
 
-This guide uses Ethereum mainnet, but the same provider can also connect to other EVM networks, Solana, Bitcoin, and Cosmos.
+Three packages share the work, and each does one job:
+
+| Package | Job |
+| --- | --- |
+| `konekt` | Speaks the WalletConnect v2 protocol to the wallet. |
+| `konekt-ui` | Renders the connect button, wallet picker, and pairing QR. |
+| `wagmi` | Keeps account, chain, and balance state in React hooks. |
+
+This is the smallest amount of code to a working connection, and also the smallest download: this stack first-loads **18.36 kB** in a production Vite app, where AppKit first-loads **721.26 kB**. You do not need to care about that yet—it simply means there is no penalty for starting the easy way.
 
 ## Before you start
 
 You need:
 
-- a browser application;
-- a WalletConnect project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/);
-- a wallet that supports WalletConnect v2.
+- a React 19 app—`pnpm create vite my-app --template react-ts` works;
+- a free project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/);
+- a wallet app that supports WalletConnect v2, such as MetaMask, Rainbow, or Trust Wallet, usually on your phone.
 
-Three terms appear throughout these docs:
-
-- **Provider** — the object your app calls to connect, read account state, and send wallet requests.
-- **Pairing** — the short-lived QR code or link that introduces the app to a wallet.
-- **Session** — the connection that remains after the user approves the app.
-
-## Install
+## 1. Install
 
 ```sh
-pnpm add konekt
+pnpm add konekt konekt-ui wagmi viem @tanstack/react-query
 ```
 
-You can use `npm install konekt` or `yarn add konekt` instead.
+You can use `npm install` or `yarn add` instead.
 
-The modern-browser EVM path is 14.74 kB minified and gzipped through the first encrypted WalletConnect message. A matched Vite React app first-loads 10.94 kB with Konekt, against 145.74 kB for `@walletconnect/ethereum-provider`. Optional transports, features, chain adapters, and UI use separate entry points. See [Why Konekt is better](../why-konekt/) for the comparison and [Bundle size and loading](../bundle-size/) for complete measurements and on-demand initialization.
+## 2. Describe your app and networks
 
-## 1. Create the provider
+Create `src/web3.tsx`. It tells wagmi which networks you support and which wallets can connect—browser extensions through `injected()`, and every WalletConnect wallet through the `konekt` connector:
 
-Import `Provider` from the main package and the EVM chain helper from `konekt/eip155`:
+```tsx
+import type { PropsWithChildren } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, createConfig, http } from "wagmi";
+import { mainnet } from "wagmi/chains";
+import { injected } from "wagmi/connectors";
+import { konekt } from "konekt-ui/wagmi";
 
-```ts
-import { Provider } from "konekt";
-import { ethereumMainnet } from "konekt/eip155";
+export const projectId = "YOUR_PROJECT_ID";
 
-const provider = await Provider.init({
-  projectId: "YOUR_PROJECT_ID",
-  metadata: {
-    name: "My app",
-    description: "Connect to My app",
-    url: window.location.origin,
-    icons: [new URL("/icon.png", window.location.origin).href],
+export const config = createConfig({
+  chains: [mainnet],
+  connectors: [
+    injected(),
+    konekt({
+      projectId,
+      metadata: {
+        name: "My app",
+        description: "Connect to My app",
+        url: window.location.origin,
+        icons: [new URL("/icon.png", window.location.origin).href],
+      },
+    }),
+  ],
+  transports: {
+    [mainnet.id]: http(),
   },
-  chains: [ethereumMainnet],
 });
-```
 
-`ethereumMainnet` is the ready-made Ethereum chain; the `evm()` factory builds any other EVM network from its chain ID. Do not pass a bare number to `chains`.
-
-`Provider.init()` creates one shared provider for the current JavaScript runtime and restores a saved session when possible. Call it once during app setup. Later calls return the same provider and do not apply new options.
-
-## 2. Show the pairing URI
-
-Register the listener before calling `connect()`:
-
-```ts
-const showPairingUri = (uri: string) => {
-  // Encode `uri` as a QR code or give it to your wallet UI.
-};
-
-provider.on("display_uri", showPairingUri);
-
-try {
-  if (!provider.connected) {
-    await provider.connect();
+// Types chain IDs across wagmi hooks as a union of your configured chains instead of plain `number`.
+declare module "wagmi" {
+  interface Register {
+    config: typeof config;
   }
-} finally {
-  provider.off("display_uri", showPairingUri);
+}
+
+const queryClient = new QueryClient();
+
+export function Web3Provider({ children }: PropsWithChildren) {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </WagmiProvider>
+  );
 }
 ```
 
-`connect()` waits until the user approves or rejects the proposal. The `display_uri` event arrives while it is waiting. Render the URI as a QR code, or use [konekt-ui](../konekt-ui/) to get a complete React modal.
+The `metadata` is what the wallet shows the user when it asks "allow this app to connect?".
 
-Pass an `AbortSignal` when your UI has a Cancel or Close button:
+To support more networks later, add them to `chains` and `transports`—for example `base` from `wagmi/chains`.
 
-```ts
-const controller = new AbortController();
-const connecting = provider.connect({ signal: controller.signal });
+## 3. Wrap your app
 
-function closePairingUi() {
-  controller.abort();
-}
+In `src/main.tsx`, put `Web3Provider` around the app:
 
-const session = await connecting;
-```
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import { Web3Provider } from "./web3";
 
-Do not log or permanently store the pairing URI. Treat it as a temporary connection secret.
-
-## 3. Read the connected account
-
-After the session connects, the EVM adapter adds `accounts` and `chainId` to the provider:
-
-```ts
-console.log(provider.accounts); // ["0x…"]
-console.log(provider.chainId); // 1
-```
-
-These properties exist only when you configure at least one EVM chain. For an app with several chain namespaces, `provider.accountsByChain` groups every approved address by its [CAIP-2](https://chainagnostic.org/CAIPs/caip-2) chain ID:
-
-```ts
-console.log(provider.accountsByChain);
-// { "eip155:1": ["0x…"] }
-```
-
-## 4. Send a wallet request
-
-```ts
-const signature = await provider.request({
-  method: "personal_sign",
-  params: ["0x48656c6c6f", provider.accounts[0]],
-});
-```
-
-Signing and transaction methods go to the wallet. Read-only JSON-RPC methods such as `eth_getBalance` need an HTTP transport configured for that chain. See [Chains and networks](../chains/) for the distinction.
-
-## Use an EVM client library
-
-- [viem](../viem/) can wrap the provider with `custom()` for typed wallet actions and reads.
-- [ethers](../ethers/) can wrap the provider with `BrowserProvider` for Ethers v6 signers and reads.
-- [wagmi](../wagmi/) connects React state and hooks through the `konekt-ui/wagmi` connector.
-- [Solana](../solana/) and [CosmJS](../cosmjs/) use small application-owned bridges over namespace requests.
-
-## Disconnect
-
-```ts
-await provider.disconnect();
-```
-
-This ends the session and emits `disconnect`. The user will need to pair again before another wallet request.
-
-## Common errors
-
-Konekt throws `ProviderRpcError` for provider and JSON-RPC failures:
-
-| Code | Meaning | What to do |
-| --- | --- | --- |
-| `4100` | There is no connected session. | Call and await `connect()` first. |
-| `4200` | The method is unsupported, the wallet declined to approve it, or an EVM read has no transport. | Read the message: it names the method and, for a declined method, lists what the wallet did approve. |
-| `-32602` | The request parameters are malformed, or the targeted chain is not configured. | Check the method’s expected `params`, and add the chain to `chains` before targeting it. |
-
-User rejection and wallet errors can have other codes. Show the message to the user when it is useful, but do not assume every error is a Konekt error.
-
-[Troubleshooting](../troubleshooting/) lists the errors Konekt throws as plain `Error` values, such as an expired proposal or a rejected relay connection.
-
-## Creating isolated providers in tests
-
-```ts
-const testProvider = await Provider.create(
-  { projectId: "test", metadata, chains: [ethereumMainnet] },
-  { session: fakeSession },
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <Web3Provider>
+      <App />
+    </Web3Provider>
+  </StrictMode>,
 );
 ```
 
-`Provider.create()` returns a new instance every time. It is intended for tests that need to inject a relay, session, seed, or storage. When you inject `session`, Konekt does not open a real relay connection.
+## 4. Add the button
+
+`ConnectButton` is the complete flow: the trigger, the wallet picker, the QR code, and—once connected—account, network, and disconnect controls.
+
+```tsx
+import { abortPairing, ConnectButton } from "konekt-ui/wagmi";
+import "konekt-ui/styles.css";
+
+export function WalletControls() {
+  return <ConnectButton onDismiss={abortPairing} />;
+}
+```
+
+Import the stylesheet once, anywhere in your app. The button finds your project ID through the connector you registered in step 2. `onDismiss={abortPairing}` makes closing the modal also cancel the pending connection.
+
+## 5. Use the connection
+
+Once connected, the wallet behaves like any other wagmi connection. Every wagmi hook works:
+
+```tsx
+import { formatUnits } from "viem";
+import { useBalance, useConnection } from "wagmi";
+
+export function Account() {
+  const connection = useConnection();
+  const balance = useBalance({ address: connection.address });
+
+  if (!connection.isConnected || !connection.address) {
+    return <p>No wallet connected.</p>;
+  }
+
+  return (
+    <section>
+      <p>{connection.address}</p>
+      {balance.data && (
+        <p>
+          {formatUnits(balance.data.value, balance.data.decimals)} {balance.data.symbol}
+        </p>
+      )}
+    </section>
+  );
+}
+```
+
+Sending a transaction is `useSendTransaction()`, switching networks is `useSwitchChain()`—see the [wagmi guide](../wagmi/) for a complete account panel.
+
+## Try it
+
+Run the dev server, click **Connect wallet**, pick a wallet or scan the QR code with your phone, and approve. Three things are worth noticing:
+
+- The approved connection is called a **session**. It is saved in the browser, so the user stays connected across page reloads.
+- The QR code carries a one-time **pairing** secret that introduces your app to the wallet. A new one is created for each attempt.
+- Signing and transactions are approved in the wallet, not in your app. On mobile, konekt-ui returns the user to their wallet automatically.
+
+## Where to go next
+
+Take these in order—each page assumes the ones before it, and nothing more:
+
+1. [Design your own connect UI](../custom-ui/) — keep your own buttons and dialogs; the hooks do the work.
+2. [Plain JavaScript](../vanilla/) — the provider underneath all of this, with no React and no UI package.
+3. [Solana](../solana/), [Cosmos](../cosmjs/), [Bitcoin](../bitcoin/), and [Sui](../sui/) — the same provider beyond Ethereum.
+4. [Everything together](../multichain/) — one connection covering several ecosystems at once.
+
+When something misbehaves, [Troubleshooting](../troubleshooting/) lists every error and its fix.

@@ -42,12 +42,32 @@ export default defineConfig({
       editLink: {
         baseUrl: "https://github.com/lsheva/konekt/edit/main/packages/docs/",
       },
+      expressiveCode: {
+        defaultProps: { wrap: true },
+      },
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/lsheva/konekt" }],
       sidebar: [
         {
-          label: "Guides",
+          label: "Start here",
           items: [
             { label: "Getting started", slug: "guides/getting-started" },
+            { label: "Design your own connect UI", slug: "guides/custom-ui" },
+            { label: "Plain JavaScript", slug: "guides/vanilla" },
+          ],
+        },
+        {
+          label: "Beyond Ethereum",
+          items: [
+            { label: "Solana", slug: "guides/solana" },
+            { label: "Cosmos", slug: "guides/cosmjs" },
+            { label: "Bitcoin", slug: "guides/bitcoin" },
+            { label: "Sui and custom namespaces", slug: "guides/sui" },
+            { label: "Everything together", slug: "guides/multichain" },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
             { label: "Chains and networks", slug: "guides/chains" },
             { label: "Sessions and options", slug: "guides/sessions" },
             { label: "Authentication", slug: "guides/features" },
@@ -64,9 +84,6 @@ export default defineConfig({
             { label: "viem", slug: "guides/viem" },
             { label: "ethers", slug: "guides/ethers" },
             { label: "wagmi", slug: "guides/wagmi" },
-            { label: "Solana", slug: "guides/solana" },
-            { label: "Bitcoin", slug: "guides/bitcoin" },
-            { label: "CosmJS", slug: "guides/cosmjs" },
           ],
         },
         {
@@ -106,6 +123,10 @@ export default defineConfig({
           promote: [
             "index*",
             "guides/getting-started*",
+            "guides/custom-ui*",
+            "guides/vanilla*",
+            "guides/sui*",
+            "guides/multichain*",
             "guides/why-konekt*",
             "guides/chains*",
             "guides/sessions*",

@@ -31,7 +31,9 @@ These are the mistakes that compile, run, and then fail in production or leak. C
 
 | Task | Page |
 | --- | --- |
-| First provider, first connection | [Getting started](../guides/getting-started/) |
+| React app with wagmi and the ready-made connect button | [Getting started](../guides/getting-started/) |
+| Custom connect components over the pairing hooks | [Design your own connect UI](../guides/custom-ui/) |
+| First provider, first connection, no framework | [Plain JavaScript](../guides/vanilla/) |
 | Chain adapters, read transports, targeting one chain | [Chains and networks](../guides/chains/) |
 | `Provider.init` options, persistence, expiry, disconnect | [Sessions and options](../guides/sessions/) |
 | SIWE, CACAO verification, custom features | [Authentication](../guides/features/) |
@@ -42,6 +44,8 @@ These are the mistakes that compile, run, and then fail in production or leak. C
 | Error codes and thrown messages | [Troubleshooting](../guides/troubleshooting/) |
 | viem, ethers, wagmi | [viem](../guides/viem/), [ethers](../guides/ethers/), [wagmi](../guides/wagmi/) |
 | Solana, Bitcoin, CosmJS | [Solana](../guides/solana/), [Bitcoin](../guides/bitcoin/), [CosmJS](../guides/cosmjs/) |
+| Sui, or any namespace without a shipped adapter | [Sui and custom namespaces](../guides/sui/) |
+| Several ecosystems in one session | [Everything together](../guides/multichain/) |
 | Replacing `@walletconnect/ethereum-provider` | [Migration guide](../guides/migrate-ethereum-provider/) |
 
 Read the matching page before generating code for that task. Do not infer an API from a neighbouring guide.

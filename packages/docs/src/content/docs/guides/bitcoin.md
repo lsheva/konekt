@@ -114,3 +114,7 @@ Targeting a chain that is not in `chains` fails with `-32602`.
 ## Check with a wallet
 
 Bitcoin wallet support for these methods varies more than EVM support does. Confirm pairing, the methods you depend on, PSBT handling, and request redirects with each wallet you intend to support.
+
+## Where to go next
+
+[Sui and custom namespaces](../sui/) builds this same forwarding pattern for a namespace Konekt does not ship, and [Everything together](../multichain/) combines every ecosystem in one provider.

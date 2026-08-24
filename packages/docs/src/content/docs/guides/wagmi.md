@@ -45,7 +45,7 @@ The connector:
 Register the connector next to injected browser wallets. Save this as `src/web3.tsx`:
 
 ```tsx
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base, mainnet } from "wagmi/chains";
@@ -84,7 +84,7 @@ declare module "wagmi" {
 
 const queryClient = new QueryClient();
 
-export function Web3Provider({ children }: { children: ReactNode }) {
+export function Web3Provider({ children }: PropsWithChildren) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -112,19 +112,13 @@ The wagmi `transports` are intentionally separate from Konekt’s optional EVM `
 ```tsx
 import { abortPairing, ConnectButton } from "konekt-ui/wagmi";
 import "konekt-ui/styles.css";
-import { konektOptions } from "./web3";
 
 export function WalletControls() {
-  return (
-    <ConnectButton
-      projectId={konektOptions.projectId}
-      onDismiss={abortPairing}
-    />
-  );
+  return <ConnectButton onDismiss={abortPairing} />;
 }
 ```
 
-`onDismiss` matters because closing the modal should also abort the proposal owned by the connector. The modal itself removes its connector event listener; `abortPairing()` stops the underlying Konekt connection.
+The button reads the WalletConnect project ID from the registered Konekt connector, so there is nothing to configure twice. `onDismiss` matters because closing the modal should also abort the proposal owned by the connector. The modal itself removes its connector event listener; `abortPairing()` stops the underlying Konekt connection.
 
 ## Use wagmi hooks
 
@@ -205,7 +199,7 @@ import { useState } from "react";
 import { WalletModal } from "konekt-ui";
 import { abortPairing, useWagmiPairing } from "konekt-ui/wagmi";
 
-export function CustomWalletButton({ projectId }: { projectId: string }) {
+export function CustomWalletButton() {
   const [open, setOpen] = useState(false);
   const pairing = useWagmiPairing();
 
@@ -216,7 +210,6 @@ export function CustomWalletButton({ projectId }: { projectId: string }) {
       </button>
       <WalletModal
         open={open}
-        projectId={projectId}
         pairing={pairing}
         onDismiss={abortPairing}
         onClose={() => setOpen(false)}
@@ -259,6 +252,8 @@ export function WalletControls() {
   );
 }
 ```
+
+The `projectId` prop is needed only on this path: with no Konekt connector registered until pairing starts, the wallet picker has nowhere else to read the ID from.
 
 This is the trade-off the repository’s [example app](https://github.com/lsheva/konekt/tree/main/packages/example) demonstrates. Weigh it deliberately: `config._internal` is not part of wagmi’s public API and can change in a minor release. Prefer static registration unless the initial-chunk saving matters for your app, and pin your wagmi version if you adopt this pattern.
 
