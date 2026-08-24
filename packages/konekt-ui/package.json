@@ -1,6 +1,6 @@
 {
   "name": "konekt-ui",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Connect and account UI for konekt",
   "license": "ISC",
   "author": "lsheva",
@@ -82,7 +82,7 @@
     "lint": "biome check ."
   },
   "peerDependencies": {
-    "konekt": ">=0.1.0",
+    "konekt": ">=0.2.0",
     "react": ">=18",
     "viem": ">=2",
     "wagmi": ">=2"
