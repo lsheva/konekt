@@ -115,7 +115,7 @@ import "konekt-ui/styles.css";
 
 const pairing = useProviderPairing(provider);
 
-<WalletModal open={open} projectId={projectId} pairing={pairing} onClose={close} />;
+<WalletModal open={open} pairing={pairing} onClose={close} />;
 ```
 
 `showQrModal` is deprecated upstream in favor of AppKit, so an app still using it has to change something regardless. See [konekt-ui](../konekt-ui/).

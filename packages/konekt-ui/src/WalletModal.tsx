@@ -14,6 +14,9 @@ import { QrCode } from "./QrCode.tsx";
 
 const PAGE = 30;
 
+const NO_PROJECT_ID =
+  "No WalletConnect project ID for wallet listings. Create the pairing from a Konekt provider or connector, or pass projectId to the pairing hook.";
+
 type View = "home" | "all" | "qr";
 
 /** A wallet the browser already has: an injected extension, or any connector the app registered. */
@@ -49,14 +52,17 @@ export type Pairing = {
   error?: string | undefined;
   /** CAIP-2 chain IDs known by the binding. The modal's `chains` prop overrides them. */
   chains?: readonly string[] | undefined;
+  /**
+   * WalletConnect Cloud project ID the modal uses for Wallet Explorer listings. The pairing hooks
+   * read it from the Konekt provider or connector, so the modal never needs it separately.
+   */
+  projectId?: string | undefined;
 };
 
 /** Props for {@link WalletModal}. */
 export type WalletModalProps = WcAppearanceProps & {
   /** Whether the dialog is rendered. */
   open: boolean;
-  /** WalletConnect Cloud project ID used to query the Wallet Explorer. */
-  projectId: string;
   /** Connection binding created by `useProviderPairing()` or `useWagmiPairing()`. */
   pairing: Pairing;
   /** CAIP-2 chain IDs. Explorer results must support at least one. Defaults to `pairing.chains`. */
@@ -141,7 +147,6 @@ function WalletCard({ name, imageUrl, onClick, unstyled }: WalletEntryProps) {
  */
 export function WalletModal({
   open,
-  projectId,
   pairing,
   chains,
   wallets,
@@ -152,7 +157,7 @@ export function WalletModal({
   theme,
   unstyled,
 }: WalletModalProps) {
-  const { connected, local, connectLocal, start, reset, error: pairError } = pairing;
+  const { connected, local, connectLocal, start, reset, error: pairError, projectId } = pairing;
 
   const [view, setView] = useState<View>("home");
   const [uri, setUri] = useState<string>();
@@ -197,6 +202,10 @@ export function WalletModal({
 
   useEffect(() => {
     if (!open) return;
+    if (!projectId) {
+      setError(NO_PROJECT_ID);
+      return;
+    }
     let cancelled = false;
     const ids = idList(featuredKey) ?? [];
     setError(undefined);
@@ -219,6 +228,10 @@ export function WalletModal({
 
   useEffect(() => {
     if (!open || view !== "all") return;
+    if (!projectId) {
+      setError(NO_PROJECT_ID);
+      return;
+    }
     let cancelled = false;
     const include = idList(includeKey);
     setLoading(true);
@@ -281,6 +294,7 @@ export function WalletModal({
   };
 
   const loadMore = () => {
+    if (!projectId) return;
     const next = page + 1;
     setLoading(true);
     void fetchWallets({

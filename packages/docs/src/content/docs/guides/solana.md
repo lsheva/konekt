@@ -66,7 +66,7 @@ if (!provider.connected) await provider.connect();
 
 `chains` always takes an array, so a single Solana chain is `[solanaMainnet]`, not `solanaMainnet`.
 
-See [Wallet UI](../wallet-ui/) for rendering the pairing URI and cancelling an attempt, and [Getting started](../getting-started/) for the connection lifecycle.
+See [Wallet UI](../wallet-ui/) for rendering the pairing URI and cancelling an attempt, and [Plain JavaScript](../vanilla/) for the connection lifecycle.
 
 ### Read the approved address
 
@@ -160,3 +160,7 @@ Build and compile the Kit transaction as you already do. The bridge only handles
 ## Check with a wallet
 
 Protocol-shape tests cover encodings, CAIP-2 targeting, legacy and versioned transactions, and malformed responses. They do not prove that a particular mobile wallet signs every method. Confirm QR pairing, cancellation, request redirects, and both transaction types with the wallets you support.
+
+## Where to go next
+
+[Cosmos](../cosmjs/) follows the same bridge pattern with CosmJS signers, and [Everything together](../multichain/) combines Solana with the other ecosystems in one provider.

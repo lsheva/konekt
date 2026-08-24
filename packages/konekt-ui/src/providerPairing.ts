@@ -33,6 +33,8 @@ export type ProviderPairingOptions = {
 export type PairingProvider = {
   /** Whether the provider already has an approved session. */
   connected: boolean;
+  /** WalletConnect Cloud project ID, forwarded to the modal for Wallet Explorer listings. */
+  projectId?: string | undefined;
   /** The chains this provider proposes. The modal lists wallets that support them. */
   chains?: readonly { id: string }[] | undefined;
   /** Starts a connection and accepts a signal for cancellation. */
@@ -109,5 +111,6 @@ export function useProviderPairing(provider?: PairingProvider, { sources }: Prov
     reset,
     error,
     chains,
+    projectId: provider?.projectId,
   };
 }

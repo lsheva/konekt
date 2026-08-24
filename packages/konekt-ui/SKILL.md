@@ -17,7 +17,7 @@ import type { Provider } from "konekt";
 import { useProviderPairing, WalletModal } from "konekt-ui";
 import "konekt-ui/styles.css";
 
-export function WalletButton({ provider, projectId }: { provider: Provider; projectId: string }) {
+export function WalletButton({ provider }: { provider: Provider }) {
   const [open, setOpen] = useState(false);
   const pairing = useProviderPairing(provider);
 
@@ -26,7 +26,6 @@ export function WalletButton({ provider, projectId }: { provider: Provider; proj
       <button type="button" onClick={() => setOpen(true)}>Connect wallet</button>
       <WalletModal
         open={open}
-        projectId={projectId}
         pairing={pairing}
         onClose={() => setOpen(false)}
       />
@@ -35,7 +34,8 @@ export function WalletButton({ provider, projectId }: { provider: Provider; proj
 }
 ```
 
-`useProviderPairing` supports every namespace and does not require wagmi. The QR view calls
+`useProviderPairing` supports every namespace and does not require wagmi. The pairing carries the
+provider's project ID for Wallet Explorer queries, so the modal takes no `projectId` prop. The QR view calls
 `provider.connect({ signal })`, renders `display_uri`, and aborts the signal when it closes.
 
 ## Injected wallets without wagmi
@@ -67,15 +67,18 @@ const pairing = useProviderPairing(provider, { sources: [solana, cosmos] });
 import { ConnectButton } from "konekt-ui/wagmi";
 import "konekt-ui/styles.css";
 
-<ConnectButton projectId={projectId} />;
+<ConnectButton />;
 ```
 
 - `konekt-ui/wagmi` exports the connector: register `konekt({ projectId, metadata })` in
   `createConfig()`, and pass `abortPairing` as `onDismiss`. Its `id` and `type` are `"konekt"`.
+- The button reads the project ID from the registered connector; do not pass a `projectId` prop
+  unless the connector is created lazily.
 - Prefer static registration in `createConfig()`. The connector initializes `Provider` lazily,
   so registration itself does not open a relay socket.
 - If the config omits it initially, pass `getWalletConnect: () => Promise<Connector>` to create and
-  return it on demand. wagmi 3 has no public API for this; `config._internal.connectors.setup()` is
+  return it on demand, plus `projectId` so the wallet list loads before the connector exists.
+  wagmi 3 has no public API for this; `config._internal.connectors.setup()` is
   the only way. Use it only when asked for on-demand registration, and say that it is private API.
 - Pass `onDismiss` when connector-owned pairing work also needs cancellation.
 - Use `useWagmiPairing` for a custom trigger with `WalletModal`.

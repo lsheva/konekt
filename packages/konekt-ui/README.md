@@ -34,10 +34,10 @@ import "konekt-ui/styles.css";
 
 const pairing = useProviderPairing(provider);
 
-<WalletModal open={open} projectId={projectId} pairing={pairing} onClose={() => setOpen(false)} />;
+<WalletModal open={open} pairing={pairing} onClose={() => setOpen(false)} />;
 ```
 
-Opening the QR view calls `provider.connect({ signal })` and renders the `display_uri` it emits. Closing the modal aborts that signal, so the pairing is cancelled with it.
+The pairing carries the provider's project ID, so the modal queries the WalletConnect Explorer without extra configuration. Opening the QR view calls `provider.connect({ signal })` and renders the `display_uri` it emits. Closing the modal aborts that signal, so the pairing is cancelled with it.
 
 ## wagmi
 
@@ -50,14 +50,13 @@ import "konekt-ui/styles.css";
 <ConnectButton projectId={projectId} getWalletConnect={registerKonekt} />;
 ```
 
-`getWalletConnect` is only needed when the config was built without the connector; the modal awaits it before pairing. Use `useWagmiPairing` directly to keep your own trigger and pass its result to `WalletModal`.
+`getWalletConnect` is only needed when the config was built without the connector; the modal awaits it before pairing, and `projectId` is only needed alongside it because a registered connector supplies its own. Use `useWagmiPairing` directly to keep your own trigger and pass its result to `WalletModal`.
 
 ## Which wallets, which networks
 
 ```tsx
 <WalletModal
   open={open}
-  projectId={projectId}
   pairing={pairing}
   onClose={() => setOpen(false)}
   chains={["eip155:1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"]}
@@ -75,7 +74,6 @@ The default theme follows the operating-system color scheme. Set `theme="light"`
 
 ```tsx
 <ConnectButton
-  projectId={projectId}
   theme="dark"
   style={{
     "--kui-accent": "#7c5cff",

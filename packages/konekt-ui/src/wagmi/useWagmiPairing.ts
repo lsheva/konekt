@@ -12,10 +12,20 @@ export type WagmiPairingOptions = {
    * contain one.
    */
   getWalletConnect?: (() => Promise<Connector>) | undefined;
+  /**
+   * Project ID for Wallet Explorer listings when no Konekt connector is registered at the time the
+   * modal opens, which happens with `getWalletConnect`. A registered connector supplies its own.
+   */
+  projectId?: string | undefined;
 };
 
 function isWalletConnect(connector: Connector): boolean {
   return connector.type === KONEKT || connector.id === KONEKT;
+}
+
+function projectIdOf(connector: Connector | undefined): string | undefined {
+  const value: unknown = connector && (connector as { projectId?: unknown }).projectId;
+  return typeof value === "string" ? value : undefined;
 }
 
 function toLocalWallet(connector: Connector): LocalWallet {
@@ -29,7 +39,7 @@ function toLocalWallet(connector: Connector): LocalWallet {
  * `"konekt"` starts WalletConnect pairing and supplies `display_uri` through its message emitter.
  * If no such connector is registered, pass `getWalletConnect` to create it lazily.
  */
-export function useWagmiPairing({ getWalletConnect }: WagmiPairingOptions = {}): Pairing {
+export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOptions = {}): Pairing {
   const connectors = useConnectors();
   const { mutate, reset: resetConnect, error: connectError } = useConnect();
   const { isConnected } = useConnection();
@@ -84,5 +94,13 @@ export function useWagmiPairing({ getWalletConnect }: WagmiPairingOptions = {}):
     resetConnect();
   }, [resetConnect]);
 
-  return { connected: isConnected, local, connectLocal, start, reset, error: error ?? connectError?.message };
+  return {
+    connected: isConnected,
+    local,
+    connectLocal,
+    start,
+    reset,
+    error: error ?? connectError?.message,
+    projectId: projectIdOf(connectors.find(isWalletConnect)) ?? projectId,
+  };
 }

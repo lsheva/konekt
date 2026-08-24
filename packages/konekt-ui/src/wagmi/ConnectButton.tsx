@@ -10,8 +10,6 @@ import { useWagmiPairing } from "./useWagmiPairing.ts";
 
 /** Props for {@link ConnectButton}. */
 export type ConnectButtonProps = WcAppearanceProps & {
-  /** WalletConnect Cloud project ID used to query Wallet Explorer. */
-  projectId: string;
   /** CAIP-2 chain IDs used to filter Explorer wallets. Defaults to configured wagmi chains. */
   chains?: readonly string[] | undefined;
   /** Include, exclude, and featured lists of WalletConnect Explorer IDs. */
@@ -21,6 +19,11 @@ export type ConnectButtonProps = WcAppearanceProps & {
    * contain one.
    */
   getWalletConnect?: (() => Promise<Connector>) | undefined;
+  /**
+   * Project ID for Wallet Explorer listings, needed only with `getWalletConnect`: a registered
+   * Konekt connector already carries its own.
+   */
+  projectId?: string | undefined;
   /** Cancels pending connection work owned by the connector when the user dismisses pairing. */
   onDismiss?: (() => void) | undefined;
 };
@@ -33,17 +36,17 @@ export type ConnectButtonProps = WcAppearanceProps & {
  * the Konekt connector only when the user starts pairing.
  */
 export function ConnectButton({
-  projectId,
   chains,
   wallets,
   getWalletConnect,
+  projectId,
   onDismiss,
   className,
   style,
   theme,
   unstyled,
 }: ConnectButtonProps) {
-  const pairing = useWagmiPairing({ getWalletConnect });
+  const pairing = useWagmiPairing({ getWalletConnect, projectId });
   const { address, isConnected, chainId } = useConnection();
   const configured = useChains();
   const [walletOpen, setWalletOpen] = useState(false);
@@ -72,7 +75,6 @@ export function ConnectButton({
         </div>
         <WalletModal
           open={walletOpen}
-          projectId={projectId}
           pairing={pairing}
           chains={chains}
           wallets={wallets}

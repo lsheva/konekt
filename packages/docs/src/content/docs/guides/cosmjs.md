@@ -138,3 +138,7 @@ const result = await directClient.sendTokens(
 ## Check with a wallet
 
 Tests cover method names, CAIP-2 targeting, base64/bigint conversion, large account numbers, malformed responses, and preserved wallet sign documents. They do not prove Amino or direct support in a given mobile wallet. Confirm pairing, cancellation, redirects, and the signing mode you ship with the wallets you support.
+
+## Where to go next
+
+[Bitcoin](../bitcoin/) forwards its methods without a bridge, [Sui](../sui/) shows how to add a namespace Konekt does not ship, and [Everything together](../multichain/) combines them all in one provider.

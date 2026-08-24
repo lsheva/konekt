@@ -21,7 +21,7 @@ import { debugBus } from "./debugBus";
 import { ethSignHash, explorers, formatError, mailTypedData, pretty, utf8Hex } from "./format";
 import { missingNamespace, openProvider, type PairKind, restoreProvider, siweChallenge } from "./pair";
 import { Seams } from "./Seams";
-import { RPC_URL, konektOptions } from "./Wagmi";
+import { RPC_URL } from "./Wagmi";
 
 const SAMPLE = "konekt showcase";
 /** Minimal well-formed StdSignDoc: a no-op with an empty message list, so nothing is broadcastable. */
@@ -318,12 +318,7 @@ export const Showcase: React.FC = () => {
               </div>
             )}
             {pairError && <p className="status">{pairError}</p>}
-            <WalletModal
-              open={pickerOpen}
-              projectId={konektOptions.projectId}
-              pairing={pairing}
-              onClose={() => setPickerOpen(false)}
-            />
+            <WalletModal open={pickerOpen} pairing={pairing} onClose={() => setPickerOpen(false)} />
             {connected && (
               <div className="row" style={{ marginTop: 10 }}>
                 <button className="btn danger" disabled={connecting} onClick={() => void disconnectWallet()}>

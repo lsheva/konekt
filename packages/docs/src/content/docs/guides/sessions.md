@@ -3,7 +3,7 @@ title: Sessions and provider options
 description: Configure storage, the relay URL, protocol lifetimes, and diagnostics, and understand how a session is restored, expires, and ends.
 ---
 
-[Getting started](../getting-started/) uses the three required options. This guide covers the rest of `Provider.init()` and what happens to a session between page loads.
+[Plain JavaScript](../vanilla/) uses the three required options. This guide covers the rest of `Provider.init()` and what happens to a session between page loads.
 
 ## All provider options
 
