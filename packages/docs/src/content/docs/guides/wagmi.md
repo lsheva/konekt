@@ -1,6 +1,6 @@
 ---
 title: wagmi
-description: Connect a wagmi 3 React app through Konekt and use the optional wallet and account UI.
+description: Connect a wagmi React app through Konekt and use the optional wallet and account UI.
 ---
 
 Wagmi needs a connector that translates its connection lifecycle into EIP-1193 provider calls. Konekt supplies the provider; the connector from `konekt-ui/wagmi` adapts it to wagmi.
@@ -11,7 +11,7 @@ In this setup:
 - the Konekt connector handles accounts, signatures, transactions, and chain switching;
 - `konekt-ui/wagmi` can render the connect, account, and network controls.
 
-This guide targets React 19, wagmi 3, and viem 2.
+This guide works with React 18 or 19, wagmi 2 or 3, and viem 2. The snippets use hook names that exist in both wagmi versions (`useAccount`, `connect`, `disconnect`, `switchChain`). Wagmi 3 also exports `useConnection` and `mutate` as newer aliases.
 
 ## Install
 
@@ -127,8 +127,8 @@ Once connected, Konekt behaves like the app’s other wagmi connectors:
 ```tsx
 import { formatUnits, parseEther } from "viem";
 import {
+  useAccount,
   useBalance,
-  useConnection,
   useDisconnect,
   useSendTransaction,
   useSwitchChain,
@@ -136,19 +136,19 @@ import {
 import { base } from "wagmi/chains";
 
 export function AccountActions() {
-  const connection = useConnection();
-  const balance = useBalance({ address: connection.address });
+  const account = useAccount();
+  const balance = useBalance({ address: account.address });
   const transaction = useSendTransaction();
   const switching = useSwitchChain();
   const disconnecting = useDisconnect();
 
-  if (!connection.isConnected || !connection.address) {
+  if (!account.isConnected || !account.address) {
     return <p>No wallet connected.</p>;
   }
 
   return (
     <section>
-      <p>{connection.address}</p>
+      <p>{account.address}</p>
       <p>
         {balance.data
           ? `${formatUnits(balance.data.value, balance.data.decimals)} ${balance.data.symbol}`
@@ -159,7 +159,7 @@ export function AccountActions() {
         type="button"
         disabled={transaction.isPending}
         onClick={() =>
-          transaction.mutate({
+          transaction.sendTransaction({
             to: "0x000000000000000000000000000000000000dEaD",
             value: parseEther("0.001"),
           })
@@ -171,7 +171,7 @@ export function AccountActions() {
       <button
         type="button"
         disabled={switching.isPending}
-        onClick={() => switching.mutate({ chainId: base.id })}
+        onClick={() => switching.switchChain({ chainId: base.id })}
       >
         Switch to Base
       </button>
@@ -179,7 +179,7 @@ export function AccountActions() {
       <button
         type="button"
         disabled={disconnecting.isPending}
-        onClick={() => disconnecting.mutate()}
+        onClick={() => disconnecting.disconnect()}
       >
         Disconnect
       </button>
@@ -238,7 +238,7 @@ export function WalletControls() {
 
   const getWalletConnect = useCallback(async () => {
     // `_internal` is wagmi's private API. Registering a connector after
-    // createConfig() has no public equivalent in wagmi 3.
+    // createConfig() has no public equivalent.
     connector.current ??= config._internal.connectors.setup(konekt(konektOptions));
     return connector.current;
   }, [config]);

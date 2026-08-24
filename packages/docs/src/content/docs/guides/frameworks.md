@@ -139,7 +139,7 @@ The `domain` and `uri` passed to [`siwe()`](../features/) must match what your s
 
 ## Next.js with wagmi
 
-Follow the [wagmi guide](../wagmi/) for the connector, then make the config SSR-aware. Wagmi needs `ssr: true` so it hydrates from cookies instead of assuming browser storage:
+Follow the [wagmi guide](../wagmi/) for the connector, then make the config SSR-aware. This works with React 18 or 19 and wagmi 2 or 3. Wagmi needs `ssr: true` so it hydrates from cookies instead of assuming browser storage:
 
 ```ts
 "use client";

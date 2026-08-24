@@ -20,7 +20,7 @@ The wagmi entry point additionally requires `viem` and `wagmi`:
 pnpm add viem wagmi
 ```
 
-Peer ranges are React 19 or newer, wagmi 3, and viem 2.
+Peer ranges are React 18 or newer, wagmi 2 or 3, and viem 2.
 
 Full guide: [lsheva.github.io/konekt/guides/konekt-ui](https://lsheva.github.io/konekt/guides/konekt-ui/)
 
