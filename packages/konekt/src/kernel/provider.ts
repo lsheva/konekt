@@ -138,6 +138,8 @@ export class Provider {
 
   /** Allows provider consumers to identify this as a WalletConnect-backed provider. */
   readonly isWalletConnect = true as const;
+  /** The WalletConnect Cloud project ID this provider was configured with. */
+  readonly projectId: string;
   #events: Emitter<ProviderEvents>;
   #session: NonNullable<ProviderDeps["session"]>;
   #chains: Chain[];
@@ -187,6 +189,7 @@ export class Provider {
    * methods perform asynchronous seed loading and session restoration.
    */
   constructor(opts: CreateProviderOptions, deps: ProviderDeps = {}) {
+    this.projectId = opts.projectId;
     this.#events = createEmitter();
     this.#chains = flattenChains(opts.chains);
     if (!this.#chains.length) throw new Error("UNSUPPORTED_CHAINS");

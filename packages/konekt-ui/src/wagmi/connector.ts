@@ -8,6 +8,12 @@ export type KonektParameters = Pick<CreateProviderOptions, "projectId" | "metada
 
 type EvmProvider = Provider & EvmExt;
 
+/** Extra properties the connector carries so the wallet UI can read them without new options. */
+type KonektConnectorProperties = {
+  /** The project ID the connector pairs with, reused by the modal for Wallet Explorer listings. */
+  projectId: string;
+};
+
 konekt.type = "konekt";
 
 let pairingAbort: AbortController | undefined;
@@ -26,8 +32,8 @@ export function abortPairing() {
  * through the connector's `message` event, which is how `ConnectButton` and `useWagmiPairing`
  * find it.
  */
-export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvider> {
-  return createConnector((config) => {
+export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvider, KonektConnectorProperties> {
+  return createConnector<EvmProvider, KonektConnectorProperties>((config) => {
     let provider: EvmProvider | undefined;
     let accountsChanged: ((accounts: string[]) => void) | undefined;
     let chainChanged: ((chainId: `0x${string}`) => void) | undefined;
@@ -89,6 +95,7 @@ export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvi
       id: "konekt",
       name: "konekt",
       type: konekt.type,
+      projectId: parameters.projectId,
 
       async connect<withCapabilities extends boolean = false>({
         chainId,

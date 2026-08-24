@@ -59,7 +59,7 @@ export function App() {
         </button>
       )}
       {error ? <p>{error}</p> : null}
-      <WalletModal open={open} projectId={projectId} pairing={pairing} onClose={() => setOpen(false)} />
+      <WalletModal open={open} pairing={pairing} onClose={() => setOpen(false)} />
     </main>
   );
 }

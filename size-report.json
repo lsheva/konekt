@@ -1,7 +1,7 @@
 [
   {
     "name": "Provider + EVM",
-    "size": 9903,
+    "size": 9912,
     "limit": 11000
   },
   {
@@ -41,17 +41,17 @@
   },
   {
     "name": "Wallet modal",
-    "size": 9618,
+    "size": 9706,
     "limit": 11000
   },
   {
     "name": "wagmi connect UI",
-    "size": 11019,
+    "size": 11123,
     "limit": 12500
   },
   {
     "name": "wagmi connector",
-    "size": 1094,
+    "size": 1098,
     "limit": 1300
   },
   {
