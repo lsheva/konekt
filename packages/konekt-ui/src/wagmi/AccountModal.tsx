@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useChains, useDisconnect, useSwitchChain } from "wagmi";
-import { avatarGradient, truncateAddress } from "../address.ts";
+import { Avatar } from "../Avatar.tsx";
+import { truncateAddress } from "../address.ts";
 import { uiClass, type WcAppearanceProps } from "../appearance.ts";
 import { Icon } from "../Icon.tsx";
 import { Modal } from "../Modal.tsx";
@@ -85,12 +86,7 @@ export function AccountModal({ open, view, onClose, onView, className, style, th
         {view === "account" && address && (
           <>
             <div className={uiClass("kui-account", unstyled)} data-kui-slot="account">
-              <span
-                className={uiClass("kui-avatar", unstyled)}
-                style={{ background: avatarGradient(address) }}
-                data-kui-slot="avatar"
-                aria-hidden="true"
-              />
+              <Avatar address={address} size={64} unstyled={unstyled} />
               <button
                 type="button"
                 className={uiClass("kui-address", unstyled)}

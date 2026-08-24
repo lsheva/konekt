@@ -106,3 +106,8 @@ i think it should be fixed
 30. console.log(provider.accounts); // ["0x…"]
 console.log(provider.chainId); // 1 -- there might be few chains
 
+
+18. Add AI usage disclosure into readme.
+19. Multiple browser wallets?
+20. rename injected to browser wallet
+21. detect browser wallet name and icon

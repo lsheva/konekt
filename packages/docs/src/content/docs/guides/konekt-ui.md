@@ -10,7 +10,7 @@ The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Pr
 :::
 
 :::tip[About 97% smaller than AppKit in a real app]
-A Vite React app with Konekt UI first-loads **18.36 kB** and totals **44.83 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.5%** smaller on first load and **95.8%** smaller overall. React is marked external in both builds. The modal itself is **12.56 kB**.
+A Vite React app with Konekt UI first-loads **18.54 kB** and totals **45.01 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.4%** smaller on first load and **95.8%** smaller overall. React is marked external in both builds. The modal itself is **12.77 kB**.
 :::
 
 Choose an entry point:
@@ -30,10 +30,10 @@ Konekt UI is better when the app needs a wallet picker, pairing QR, and account 
 
 | UI path | First load | Overall |
 | --- | ---: | ---: |
-| Vite app with Konekt `WalletModal` | **18.36 kB** | **44.83 kB** |
+| Vite app with Konekt `WalletModal` | **18.54 kB** | **45.01 kB** |
 | Vite app with `@reown/appkit@1.8.23` | **721.26 kB** | **1079.28 kB** |
 
-Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.56 kB** (9.71 kB JavaScript and 2.85 kB CSS); the wagmi `ConnectButton` path is **13.98 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
+Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.77 kB** (9.83 kB JavaScript and 2.94 kB CSS); the wagmi `ConnectButton` path is **14.22 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
 
 | Capability | Konekt UI | Reown AppKit |
 | --- | --- | --- |
@@ -329,6 +329,8 @@ If you compose the lower-level `Modal` or `QrCode` exports yourself, provide con
 | --- | --- | --- |
 | `Modal` | `konekt-ui` | The accessible dialog shell: focus trap, Escape, backdrop, restored focus. |
 | `QrCode` | `konekt-ui` | Renders a pairing URI as a QR code. |
+| `Avatar` | `konekt-ui` | Address-derived gradient disc used by the account chip. |
+| `truncateAddress` | `konekt-ui` | Shortens a hex address for a chip or heading. |
 | `fetchWallets` | `konekt-ui` | Queries the WalletConnect Explorer. Returns one page of listings. |
 | `filterWallets` | `konekt-ui` | Applies `include`, `exclude`, and `featured` to listings. |
 | `FEATURED_WALLET_IDS` | `konekt-ui` | Default featured Explorer IDs. |
