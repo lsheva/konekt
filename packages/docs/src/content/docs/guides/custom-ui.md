@@ -106,7 +106,9 @@ Two details carry the whole design:
 - `pairing.local` — wallets already in the browser. Render them as buttons that call `pairing.connectLocal(wallet)`.
 - `fetchWallets()` — one page of WalletConnect Explorer listings, filtered by `filterWallets()` with `include`, `exclude`, and `featured` IDs.
 
-On a phone there is nothing to scan, so a tapped wallet should open directly: `walletHref(listing, uri)` builds the deep link from a listing and the pairing URI, `openWalletLink()` navigates to it, and `isMobile()` tells you which presentation to prefer.
+On a phone there is nothing to scan, so a tapped wallet should open directly: `walletHref(listing, uri)` builds the deep link from a listing and the pairing URI, `openWalletLink()` navigates to it, and `isMobile()` tells you which presentation to prefer. `walletLink(listing, true)` answers whether a listing can be reached from a phone at all, without needing a URI.
+
+Two rules come with that on iOS. Start pairing before the user taps, because WebKit refuses to leave for a custom scheme once the gesture has expired, and call `openWalletLink()` inside the tap handler itself rather than in an effect that waits for the URI. `pairingRefreshDelay(uri)` then tells you how long you may keep offering that URI, so a picker left open replaces a pairing before it lapses instead of offering a link no wallet will accept. `pairingExpiry(uri)` is the raw deadline behind it.
 
 A connected account chip is `Avatar` plus `truncateAddress`:
 
@@ -130,9 +132,12 @@ import { Avatar, truncateAddress } from "konekt-ui";
 | `fetchWallets` | `konekt-ui` | Queries the WalletConnect Explorer, one page at a time. |
 | `filterWallets` | `konekt-ui` | Applies `include`, `exclude`, and `featured` to listings. |
 | `FEATURED_WALLET_IDS` | `konekt-ui` | The default featured Explorer IDs. |
+| `walletLink` | `konekt-ui` | The base URL a listing advertised for one platform, or nothing. |
 | `walletHref` | `konekt-ui` | Wallet deep link from a listing and a pairing URI. |
-| `openWalletLink` | `konekt-ui` | Navigates to a wallet link. |
+| `openWalletLink` | `konekt-ui` | Navigates to a wallet link. Call it inside the tap that asked for it. |
 | `isMobile` | `konekt-ui` | Whether to prefer deep links over a QR code. |
+| `pairingExpiry` | `konekt-ui` | The deadline a pairing URI carries, in unix seconds. |
+| `pairingRefreshDelay` | `konekt-ui` | How long that URI may still be offered, in milliseconds. |
 | `AccountModal` | `konekt-ui/wagmi` | The connected account and network dialog, reusable behind a custom button. |
 
 ## Keep the bundle honest

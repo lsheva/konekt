@@ -2,6 +2,7 @@ import type { CreateProviderOptions, Provider } from "konekt";
 import type { EvmExt } from "konekt/eip155";
 import { getAddress, numberToHex } from "viem";
 import { type CreateConnectorFn, createConnector } from "wagmi";
+import { isMobile, openWalletLink } from "../link.ts";
 
 /** Provider options the connector forwards to `Provider.init()`. Chains come from the wagmi config. */
 export type KonektParameters = Pick<CreateProviderOptions, "projectId" | "metadata" | "relayUrl">;
@@ -73,8 +74,9 @@ export function konekt(parameters: KonektParameters): CreateConnectorFn<EvmProvi
         p.on("disconnect", disconnected);
       }
       if (!requestSent) {
+        /** Only a phone left for the wallet, so only a phone has somewhere to be sent back to. */
         requestSent = ({ url }) => {
-          if (url) window.location.assign(url);
+          if (url && isMobile()) openWalletLink(url);
         };
         p.on("request_sent", requestSent);
       }

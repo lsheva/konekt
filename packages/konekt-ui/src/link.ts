@@ -25,25 +25,32 @@ export function formatWalletLink(href: string, uri: string): string {
 }
 
 /**
- * Selects and formats the best available link for a wallet and platform.
+ * The base URL a wallet advertised for one platform, native scheme first.
  *
- * The preferred platform falls back to the other platform when it has no link.
+ * Platforms do not stand in for each other: a listing with only desktop links cannot be reached
+ * from a phone, and the caller offers a QR code instead.
+ *
+ * @returns `undefined` when the wallet advertised no link for that platform.
  */
+export function walletLink(wallet: ExplorerWallet, mobile = isMobile()): string | undefined {
+  const links = mobile ? wallet.mobile : wallet.desktop;
+  return links.native || links.universal || undefined;
+}
+
+/** Formats the pairing URI into the wallet's link for one platform. */
 export function walletHref(wallet: ExplorerWallet, uri: string, mobile = isMobile()): string | undefined {
-  const primary = mobile ? wallet.mobile : wallet.desktop;
-  const fallback = mobile ? wallet.desktop : wallet.mobile;
-  const href = primary.native || primary.universal || fallback.native || fallback.universal;
-  if (!href) return undefined;
-  const formatted = formatWalletLink(href, uri);
-  return formatted || undefined;
+  const base = walletLink(wallet, mobile);
+  if (!base) return undefined;
+  return formatWalletLink(base, uri) || undefined;
 }
 
 /**
  * Opens a formatted wallet link.
  *
- * Mobile navigation replaces the current page. Desktop navigation opens a protected new tab.
+ * Mobile navigation replaces the current page. Desktop navigation opens a protected new tab. Call
+ * this inside the event handler of the tap that asked for it: WebKit refuses to leave for a custom
+ * scheme once the gesture has expired.
  */
 export function openWalletLink(href: string): void {
-  if (isMobile()) window.location.assign(href);
-  else window.open(href, "_blank", "noreferrer,noopener");
+  window.open(href, isMobile() ? "_self" : "_blank", "noreferrer,noopener");
 }

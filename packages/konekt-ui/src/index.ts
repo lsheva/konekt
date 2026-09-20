@@ -18,8 +18,9 @@ export {
   type WalletFilter,
   type WalletLinks,
 } from "./explorer.ts";
-export { formatWalletLink, isMobile, openWalletLink, walletHref } from "./link.ts";
+export { formatWalletLink, isMobile, openWalletLink, walletHref, walletLink } from "./link.ts";
 export { Modal, type ModalProps } from "./Modal.tsx";
+export { pairingExpiry, pairingRefreshDelay } from "./pairing.ts";
 export {
   type LocalWalletSource,
   type PairingProvider,

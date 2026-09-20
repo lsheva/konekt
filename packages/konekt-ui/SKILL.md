@@ -38,6 +38,18 @@ export function WalletButton({ provider }: { provider: Provider }) {
 provider's project ID for Wallet Explorer queries, so the modal takes no `projectId` prop. The QR view calls
 `provider.connect({ signal })`, renders `display_uri`, and aborts the signal when it closes.
 
+## Mobile
+
+The modal already handles phones; do not rebuild this. It pairs when it opens rather than on tap,
+because WebKit drops a redirect to a custom scheme once the gesture expires, then leaves for the
+wallet inside the tap, shows "Continue in Wallet" with an Open button instead of an unscannable QR,
+and lists only wallets with a mobile link. A pairing near its deadline is replaced, and `onDismiss`
+runs for the discarded attempt as well as for a user who left.
+
+In a custom picker, call `openWalletLink()` in the tap handler, never in an effect awaiting the URI.
+`walletLink(listing, true)` asks whether a phone can reach a wallet at all; `pairingRefreshDelay(uri)`
+gives the milliseconds that URI may still be offered.
+
 ## Injected wallets without wagmi
 
 `useProviderPairing(provider, { sources })` lists injected wallets as installed choices next to

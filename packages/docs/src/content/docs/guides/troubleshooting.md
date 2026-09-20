@@ -121,6 +121,14 @@ provider.on("request_sent", ({ url }) => {
 
 `url` is `undefined` when the wallet advertised no redirect. See [Wallet UI](../wallet-ui/#open-the-wallet-for-a-request).
 
+### Tapping a wallet on an iPhone only shows a QR code
+
+Your UI is fetching the pairing URI after the tap. WebKit refuses to leave for a wallet’s custom scheme once the gesture that asked for it has expired, so a redirect issued after the relay round trip is dropped without an error. Start pairing before the user chooses a wallet, then call `openWalletLink()` inside the tap handler. `WalletModal` does this for you; [Build your own UI](../custom-ui/#step-3-your-wallet-list) covers it for a custom picker.
+
+### An injected wallet is offered in a browser that has none
+
+A wagmi config registers `injected()` whether or not an extension answers, and mobile Safari usually has none. `useWagmiPairing` lists an injected connector only while `getProvider()` resolves, so upgrade konekt-ui if a dead “Installed” row appears; a custom picker should make the same check.
+
 ## Getting more detail
 
 Pass `onDebug` to see relay and protocol events without exposing payload contents:
