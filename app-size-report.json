@@ -52,7 +52,7 @@
       "package": "size-konekt-ui",
       "versions": {
         "konekt": "0.2.0",
-        "konekt-ui": "0.2.0"
+        "konekt-ui": "0.3.0"
       },
       "firstLoad": {
         "raw": 58568,
