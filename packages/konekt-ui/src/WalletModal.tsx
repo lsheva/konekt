@@ -8,8 +8,9 @@ import {
   type WalletFilter,
 } from "./explorer.ts";
 import { Icon } from "./Icon.tsx";
-import { isMobile, openWalletLink, walletHref } from "./link.ts";
+import { isMobile, openWalletLink, walletHref, walletLink } from "./link.ts";
 import { Modal } from "./Modal.tsx";
+import { pairingRefreshDelay } from "./pairing.ts";
 import { QrCode } from "./QrCode.tsx";
 
 const PAGE = 30;
@@ -17,7 +18,7 @@ const PAGE = 30;
 const NO_PROJECT_ID =
   "No WalletConnect project ID for wallet listings. Create the pairing from a Konekt provider or connector, or pass projectId to the pairing hook.";
 
-type View = "home" | "all" | "qr";
+type View = "home" | "all" | "connect";
 
 /** A wallet the browser already has: an injected extension, or any connector the app registered. */
 export type LocalWallet = {
@@ -70,8 +71,9 @@ export type WalletModalProps = WcAppearanceProps & {
   /** Include, exclude, and featured lists of WalletConnect Explorer IDs. */
   wallets?: WalletFilter | undefined;
   /**
-   * Runs when the user leaves an unfinished pairing flow. Use it to cancel work owned outside the
-   * `Pairing`, such as a wagmi connector's pending connection.
+   * Runs when an unfinished pairing attempt is discarded: the user left, or the modal replaced a
+   * pairing that was about to lapse. Use it to cancel work owned outside the `Pairing`, such as a
+   * wagmi connector's pending connection.
    */
   onDismiss?: (() => void) | undefined;
   /** Requests that the controlling component set `open` to `false`. */
@@ -147,9 +149,14 @@ function WalletRowSkeleton({ unstyled }: { unstyled?: boolean | undefined }) {
 /**
  * Wallet picker and WalletConnect pairing dialog.
  *
- * The modal loads compatible wallets from WalletConnect Explorer, includes any local wallets from
- * the pairing binding, and starts pairing only when the user enters the QR view. Closing that view
- * runs the teardown returned by `pairing.start`.
+ * The modal loads compatible wallets from WalletConnect Explorer and includes any local wallets
+ * from the pairing binding. On a desktop browser it starts pairing when the user asks for a QR
+ * code, and closing that view runs the teardown returned by `pairing.start`.
+ *
+ * On a phone it instead pairs as soon as it opens, lists only wallets reachable by a mobile link,
+ * and leaves for the wallet inside the tap that chose it. Both are required: WebKit refuses to open
+ * a custom scheme once the gesture that asked for it has expired, so the URI cannot be fetched
+ * first. A pairing that is about to lapse is replaced with a fresh one.
  *
  * The dialog traps keyboard focus, closes on Escape, restores previous focus, and labels its
  * controls for assistive technology.
@@ -182,7 +189,14 @@ export function WalletModal({
   const [error, setError] = useState<string>();
   const [copiedUri, setCopiedUri] = useState(false);
   const [featuredReady, setFeaturedReady] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const opened = useRef<string | undefined>(undefined);
+
+  const mobile = isMobile();
+
+  /** Only `pairing.start` is promised to be stable, so nothing else may restart a live pairing. */
+  const latest = useRef({ reset, onDismiss });
+  latest.current = { reset, onDismiss };
 
   const chainKey = idKey(chains ?? pairing.chains);
   const includeKey = idKey(wallets?.include);
@@ -203,6 +217,7 @@ export function WalletModal({
     setQuery("");
     setLoaded(false);
     setCopiedUri(false);
+    setReplacing(false);
     onClose();
   }, [connected, onClose, onDismiss, reset]);
 
@@ -280,21 +295,67 @@ export function WalletModal({
     };
   }, [open, view, projectId, query, chainKey, includeKey, filter]);
 
-  useEffect(() => {
-    if (!open || view !== "qr") return;
-    return start(setUri);
-  }, [open, view, start]);
+  /** A phone pairs while the user is still choosing, so the deep link can open inside their tap. */
+  const pairingWanted = open && (mobile || view === "connect");
 
   useEffect(() => {
-    if (!uri || !selected || !isMobile()) return;
+    if (!pairingWanted) return;
+    let stop = () => {};
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let live: string | undefined;
+    let replaced = false;
+
+    const onUri = (next: string) => {
+      live = next;
+      setUri(next);
+      setReplacing(false);
+      /** Whatever the discarded attempt reported on its way out is not this pairing's news. */
+      if (replaced) {
+        replaced = false;
+        latest.current.reset();
+      }
+      const delay = pairingRefreshDelay(next);
+      if (delay !== undefined) timer = setTimeout(replace, delay);
+    };
+
+    /** A pairing nobody can answer any more is worse than the wait for a new one. */
+    function replace() {
+      clearTimeout(timer);
+      latest.current.onDismiss?.();
+      stop();
+      live = undefined;
+      setUri(undefined);
+      setReplacing(true);
+      replaced = true;
+      stop = start(onUri);
+    }
+
+    /** Timers are throttled or suspended in a hidden tab, so coming back is its own check. */
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && live && pairingRefreshDelay(live) === 0) replace();
+    };
+
+    stop = start(onUri);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      stop();
+    };
+  }, [pairingWanted, start]);
+
+  /** Only the first attempt for a chosen wallet leaves on its own; a replacement waits to be asked. */
+  useEffect(() => {
+    if (!uri || !selected || !mobile || opened.current) return;
     const href = walletHref(selected, uri, true);
-    if (!href || opened.current === href) return;
+    if (!href) return;
     opened.current = href;
     openWalletLink(href);
-  }, [uri, selected]);
+  }, [uri, selected, mobile]);
 
   const featuredIds = idList(featuredKey) ?? [];
-  const featuredOnly = featured.filter((w) => !localFor(w, local));
+  const reachable = (list: readonly ExplorerWallet[]) => (mobile ? list.filter((w) => walletLink(w, true)) : list);
+  const featuredOnly = reachable(featured.filter((w) => !localFor(w, local)));
   const showFeaturedSkeletons = !featuredReady && featured.length === 0 && featuredIds.length > 0;
 
   const pickWallet = (wallet: ExplorerWallet) => {
@@ -306,7 +367,12 @@ export function WalletModal({
     }
     opened.current = undefined;
     setSelected(wallet);
-    setView("qr");
+    setView("connect");
+    if (!mobile || !uri) return;
+    const href = walletHref(wallet, uri, true);
+    if (!href) return;
+    opened.current = href;
+    openWalletLink(href);
   };
 
   const loadMore = () => {
@@ -329,16 +395,25 @@ export function WalletModal({
       .finally(() => setLoading(false));
   };
 
-  const title = view === "all" ? "All wallets" : view === "qr" ? (selected?.name ?? "WalletConnect") : "Connect wallet";
+  const title =
+    view === "all" ? "All wallets" : view === "connect" ? (selected?.name ?? "WalletConnect") : "Connect wallet";
   const href = uri && selected ? walletHref(selected, uri) : undefined;
-  const connectError = view === "qr" ? pairError : undefined;
+  const connectError = view === "connect" && !replacing ? pairError : undefined;
+  /** The wallet the phone leaves for, when it advertised a mobile link. A QR code serves the rest. */
+  const leaveFor = mobile && selected && walletLink(selected, true) ? selected : undefined;
+  const lead = leaveFor
+    ? `Continue in ${leaveFor.name}, then come back here`
+    : `Scan this QR code with ${selected?.name ?? "your wallet"}${mobile ? "" : " on your phone"}`;
   const goHome = () => {
-    if (view === "qr") {
-      onDismiss?.();
-      reset();
-      setUri(undefined);
+    if (view === "connect") {
       setSelected(undefined);
       setCopiedUri(false);
+      /** A phone keeps its pairing: it was started for the modal, not for one wallet. */
+      if (!mobile) {
+        onDismiss?.();
+        reset();
+        setUri(undefined);
+      }
     }
     setView("home");
   };
@@ -395,7 +470,7 @@ export function WalletModal({
               data-kui-slot="wallet-option"
               onClick={() => {
                 setSelected(undefined);
-                setView("qr");
+                setView("connect");
               }}
             >
               <span className={uiClass("kui-row-icon kui-row-icon-soft", unstyled)}>
@@ -469,7 +544,7 @@ export function WalletModal({
               </p>
             )}
             <div className={uiClass("kui-grid", unstyled)} data-kui-slot="wallet-list">
-              {listed.map((w) => (
+              {reachable(listed).map((w) => (
                 <WalletCard
                   key={w.id}
                   name={w.name}
@@ -493,21 +568,31 @@ export function WalletModal({
           </>
         )}
 
-        {view === "qr" && (
-          <div className={uiClass("kui-qr-wrap", unstyled)} data-kui-slot="qr">
-            <div className={uiClass("kui-qr-card", unstyled)}>
-              {uri ? (
-                <QrCode value={uri} unstyled={unstyled} />
-              ) : (
-                <div className={uiClass("kui-qr-waiting", unstyled)}>
-                  <span className={uiClass("kui-spinner", unstyled)} />
-                  Creating a secure connection…
-                </div>
-              )}
-            </div>
-            <p className={uiClass("kui-qr-lead", unstyled)}>
-              Scan this QR code with {selected ? selected.name : "your wallet"} on your phone
-            </p>
+        {view === "connect" && (
+          <div className={uiClass("kui-qr-wrap", unstyled)} data-kui-slot={leaveFor ? "connecting" : "qr"}>
+            {leaveFor ? (
+              <div className={uiClass("kui-leaving", unstyled)}>
+                <WalletImage
+                  name={leaveFor.name}
+                  imageUrl={leaveFor.imageUrl}
+                  iconClass="kui-leaving-icon"
+                  unstyled={unstyled}
+                />
+                <span className={uiClass("kui-spinner", unstyled)} />
+              </div>
+            ) : (
+              <div className={uiClass("kui-qr-card", unstyled)}>
+                {uri ? (
+                  <QrCode value={uri} unstyled={unstyled} />
+                ) : (
+                  <div className={uiClass("kui-qr-waiting", unstyled)}>
+                    <span className={uiClass("kui-spinner", unstyled)} />
+                    Creating a secure connection…
+                  </div>
+                )}
+              </div>
+            )}
+            <p className={uiClass("kui-qr-lead", unstyled)}>{lead}</p>
             {href && (
               <button
                 type="button"

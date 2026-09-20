@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Connector } from "wagmi";
 import { useAccount, useConnect, useConnectors } from "wagmi";
 import type { LocalWallet, Pairing } from "../WalletModal.tsx";
 
 const KONEKT = "konekt";
+const INJECTED = "injected";
 
 /** Options for {@link useWagmiPairing}. */
 export type WagmiPairingOptions = {
@@ -23,6 +24,36 @@ function isWalletConnect(connector: Connector): boolean {
   return connector.type === KONEKT || connector.id === KONEKT;
 }
 
+/** wagmi names its targetless injected connector `injected`; EIP-6963 entries carry their rdns. */
+function isGenericInjected(connector: Connector): boolean {
+  return connector.type === INJECTED && connector.id === INJECTED;
+}
+
+/**
+ * The injected connectors whose provider the browser actually has.
+ *
+ * A wagmi config registers `injected()` whether or not an extension answers, so a browser without
+ * one — mobile Safari, most often — would otherwise be offered a wallet it cannot reach.
+ */
+function useInjectedProviders(connectors: readonly Connector[]): ReadonlySet<string> {
+  const [present, setPresent] = useState<ReadonlySet<string>>(() => new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const probe = connectors
+      .filter((c) => c.type === INJECTED)
+      .map((c) => c.getProvider().then((provider) => (provider ? c.uid : undefined)));
+    void Promise.all(probe).then((uids) => {
+      if (!cancelled) setPresent(new Set(uids.filter((uid): uid is string => uid !== undefined)));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [connectors]);
+
+  return present;
+}
+
 function projectIdOf(connector: Connector | undefined): string | undefined {
   const value: unknown = connector && (connector as { projectId?: unknown }).projectId;
   return typeof value === "string" ? value : undefined;
@@ -35,9 +66,10 @@ function toLocalWallet(connector: Connector): LocalWallet {
 /**
  * Creates a {@link Pairing} from the nearest wagmi provider.
  *
- * Connectors other than Konekt become local wallet choices. A connector whose `id` or `type` is
- * `"konekt"` starts WalletConnect pairing and supplies `display_uri` through its message emitter.
- * If no such connector is registered, pass `getWalletConnect` to create it lazily.
+ * Connectors other than Konekt become local wallet choices, injected ones only while their provider
+ * is in the browser. A connector whose `id` or `type` is `"konekt"` starts WalletConnect pairing and
+ * supplies `display_uri` through its message emitter. If no such connector is registered, pass
+ * `getWalletConnect` to create it lazily.
  */
 export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOptions = {}): Pairing {
   const connectors = useConnectors();
@@ -48,7 +80,13 @@ export function useWagmiPairing({ getWalletConnect, projectId }: WagmiPairingOpt
   const latest = useRef(connectors);
   latest.current = connectors;
 
-  const local = useMemo(() => connectors.filter((c) => !isWalletConnect(c)).map(toLocalWallet), [connectors]);
+  const injected = useInjectedProviders(connectors);
+  const local = useMemo(() => {
+    const usable = connectors.filter((c) => !isWalletConnect(c) && (c.type !== INJECTED || injected.has(c.uid)));
+    /** One wallet, one row: a named EIP-6963 entry says everything the generic connector would. */
+    const named = usable.some((c) => c.type === INJECTED && !isGenericInjected(c));
+    return usable.filter((c) => !named || !isGenericInjected(c)).map(toLocalWallet);
+  }, [connectors, injected]);
 
   const connectLocal = useCallback(
     (wallet: LocalWallet) => {

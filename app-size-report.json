@@ -55,12 +55,12 @@
         "konekt-ui": "0.2.0"
       },
       "firstLoad": {
-        "raw": 57021,
-        "gzip": 18544
+        "raw": 58568,
+        "gzip": 18975
       },
       "overall": {
-        "raw": 120972,
-        "gzip": 45013
+        "raw": 122519,
+        "gzip": 45444
       }
     }
   ]

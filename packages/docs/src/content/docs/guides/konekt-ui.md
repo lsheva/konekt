@@ -10,7 +10,7 @@ The [konekt showcase](https://lsheva.github.io/konekt/showcase/) pairs a raw `Pr
 :::
 
 :::tip[About 97% smaller than AppKit in a real app]
-A Vite React app with Konekt UI first-loads **18.54 kB** and totals **45.01 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.4%** smaller on first load and **95.8%** smaller overall. React is marked external in both builds. The modal itself is **12.77 kB**.
+A Vite React app with Konekt UI first-loads **18.98 kB** and totals **45.44 kB**. The same shell with `@reown/appkit@1.8.23` first-loads **721.26 kB** and totals **1079.28 kB**—**97.4%** smaller on first load and **95.8%** smaller overall. React is marked external in both builds. The modal itself is **13.28 kB**.
 :::
 
 Choose an entry point:
@@ -30,10 +30,10 @@ Konekt UI is better when the app needs a wallet picker, pairing QR, and account 
 
 | UI path | First load | Overall |
 | --- | ---: | ---: |
-| Vite app with Konekt `WalletModal` | **18.54 kB** | **45.01 kB** |
+| Vite app with Konekt `WalletModal` | **18.98 kB** | **45.44 kB** |
 | Vite app with `@reown/appkit@1.8.23` | **721.26 kB** | **1079.28 kB** |
 
-Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **12.77 kB** (9.83 kB JavaScript and 2.94 kB CSS); the wagmi `ConnectButton` path is **14.22 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
+Those rows are production builds of `packages/size-konekt-ui` and `packages/size-appkit`, with React marked external. The Konekt modal and stylesheet alone are **13.28 kB** (10.30 kB JavaScript and 2.98 kB CSS); the wagmi `ConnectButton` path is **14.87 kB** with the same stylesheet. AppKit remains a broader product, but even with email, socials, swaps, on-ramp, and analytics disabled it still first-loads wallet-list and email UI.
 
 | Capability | Konekt UI | Reown AppKit |
 | --- | --- | --- |
@@ -95,15 +95,26 @@ The pairing carries the provider’s WalletConnect project ID, and the modal sen
 
 ### What the modal does on its own
 
-Pairing does not begin when the modal opens. It begins when the user picks a wallet or the WalletConnect option and reaches the QR view. From there the modal:
+On a desktop browser, pairing does not begin when the modal opens. It begins when the user picks a wallet or the WalletConnect option and reaches the QR view. From there the modal:
 
 1. calls `provider.connect({ signal })`;
 2. renders the URI from `display_uri`;
-3. on a mobile browser, opens the selected wallet’s deep link as soon as the URI arrives;
+3. replaces a pairing that is about to lapse with a fresh one, calling `onDismiss` for the discarded attempt;
 4. aborts the pending connection and calls `onDismiss` if the user leaves before it finishes;
 5. closes itself once the provider connects, by calling `onClose`.
 
 Because it closes itself, keep `open` as controlled state and let `onClose` set it to `false`. The modal also skips pairing entirely when `pairing.connected` is already true.
+
+### On a phone
+
+A phone gets a different flow, and the difference is not cosmetic. WebKit refuses to leave for a wallet’s custom scheme once the tap that asked for it has expired, and a pairing URI takes a relay round trip to arrive — so a modal that pairs on tap can never deep link on iOS. The modal therefore:
+
+- pairs as soon as it opens, so a URI is in hand before the user chooses;
+- leaves for the wallet inside the tap itself, and shows “Continue in Wallet” with an **Open** button rather than a QR code nobody can scan with the phone they are holding;
+- lists only wallets that advertised a mobile link, because a desktop-only listing cannot be reached from a phone;
+- opens automatically once per chosen wallet. A replaced pairing waits to be asked, so the page never navigates away on its own.
+
+Pairing early means a socket opens for a modal the user may only browse. That is the price of the redirect working at all.
 
 On its own, the provider adapter lists WalletConnect Explorer wallets and the generic QR option. Pass `sources` to also list injected browser wallets (see [Injected wallets](#injected-wallets-without-wagmi)), or use the wagmi adapter when wagmi already manages your EVM connectors.
 
@@ -116,7 +127,7 @@ On its own, the provider adapter lists WalletConnect Explorer wallets and the ge
 | `onClose` | `() => void` | Asks the parent to set `open` to `false`. Required. |
 | `chains` | `readonly string[]` | CAIP-2 IDs used to filter Explorer results. Defaults to the provider’s chains. |
 | `wallets` | `WalletFilter` | `include`, `exclude`, and `featured` Explorer IDs. |
-| `onDismiss` | `() => void` | Runs when the user abandons an unfinished pairing. |
+| `onDismiss` | `() => void` | Runs when an unfinished pairing is discarded: the user left, or it was replaced before lapsing. |
 | `theme` | `"light" \| "dark" \| "system"` | Color scheme. Defaults to `"system"`. |
 | `className` | `string` | Extra class on the root. |
 | `style` | `WcStyle` | Inline styles plus `--kui-*` token overrides. |
@@ -215,7 +226,8 @@ pnpm add konekt konekt-ui react viem wagmi
 `ConnectButton` uses the connectors already registered in your wagmi config:
 
 - a connector whose `id` or `type` is `"konekt"` provides WalletConnect pairing;
-- other connectors appear as installed wallet choices;
+- other connectors appear as installed wallet choices, injected ones only while their provider is in the browser: a config registers `injected()` whether or not an extension answers, and mobile Safari usually has none;
+- a named EIP-6963 entry hides the generic injected connector, so one wallet is one row;
 - after connection, the button opens account, network, and disconnect controls.
 
 ```tsx
@@ -334,9 +346,12 @@ If you compose the lower-level `Modal` or `QrCode` exports yourself, provide con
 | `fetchWallets` | `konekt-ui` | Queries the WalletConnect Explorer. Returns one page of listings. |
 | `filterWallets` | `konekt-ui` | Applies `include`, `exclude`, and `featured` to listings. |
 | `FEATURED_WALLET_IDS` | `konekt-ui` | Default featured Explorer IDs. |
+| `walletLink` | `konekt-ui` | The base URL a listing advertised for one platform, or nothing. |
 | `walletHref` | `konekt-ui` | Builds a wallet deep link from a listing and a pairing URI. |
-| `openWalletLink` | `konekt-ui` | Navigates to a wallet link. |
+| `openWalletLink` | `konekt-ui` | Navigates to a wallet link. Call it inside the tap that asked for it. |
 | `isMobile` | `konekt-ui` | Whether to prefer deep links over a QR code. |
+| `pairingExpiry` | `konekt-ui` | The deadline a pairing URI carries, in unix seconds. |
+| `pairingRefreshDelay` | `konekt-ui` | How long that URI may still be offered, in milliseconds. |
 | `AccountModal` | `konekt-ui/wagmi` | The connected account and network dialog `ConnectButton` opens. |
 
 `AccountModal` is controlled through `open`, `view` (`"account"` or `"networks"`), `onView`, and `onClose`, so a custom button can reuse the account and network switching UI without `ConnectButton`.
