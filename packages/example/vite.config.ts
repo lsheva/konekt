@@ -1,5 +1,10 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import mkcert from "vite-plugin-mkcert";
+
+// One .env at the workspace root, shared with the test suite. The prefix list names the variable
+// outright rather than opening all of WC_*, so a future secret there does not reach the bundle.
+const envDir = "../..";
 
 const UNINFORMATIVE = new Set([
   "_esm",
@@ -50,30 +55,35 @@ function dominantPackage(moduleIds: readonly string[]): string | undefined {
   return winner;
 }
 
-export default defineConfig({
-  plugins: [react()],
-  // One .env at the workspace root, shared with the test suite. The prefix list names the variable
-  // outright rather than opening all of WC_*, so a future secret there does not reach the bundle.
-  envDir: "../..",
-  envPrefix: ["VITE_", "WC_PROJECT_ID"],
-  define: {
-    "process.env.WC_DEBUG": JSON.stringify(process.env.WC_DEBUG ?? ""),
-  },
-  optimizeDeps: {
-    exclude: ["konekt", "konekt-ui"],
-  },
-  build: {
-    sourcemap: true,
-    rolldownOptions: {
-      output: {
-        chunkFileNames(chunk) {
-          const stem = chunk.name.split(".")[0].toLowerCase();
-          if (!UNINFORMATIVE.has(stem)) return "assets/[name]-[hash].js";
+export default defineConfig(({ mode }) => {
+  // DEV_SERVER_HTTPS serves the LAN over a locally trusted certificate, which is what a phone
+  // needs: iOS reaches a dev server by IP, and Web Crypto and the clipboard want a secure origin.
+  const https = Boolean(loadEnv(mode, envDir, "DEV_SERVER_HTTPS").DEV_SERVER_HTTPS);
 
-          const pkg = dominantPackage(chunk.moduleIds);
-          return pkg ? `assets/${pkg}-[hash].js` : "assets/[name]-[hash].js";
+  return {
+    plugins: [react(), https ? mkcert() : null],
+    envDir,
+    envPrefix: ["VITE_", "WC_PROJECT_ID"],
+    server: { host: https },
+    define: {
+      "process.env.WC_DEBUG": JSON.stringify(process.env.WC_DEBUG ?? ""),
+    },
+    optimizeDeps: {
+      exclude: ["konekt", "konekt-ui"],
+    },
+    build: {
+      sourcemap: true,
+      rolldownOptions: {
+        output: {
+          chunkFileNames(chunk) {
+            const stem = chunk.name.split(".")[0].toLowerCase();
+            if (!UNINFORMATIVE.has(stem)) return "assets/[name]-[hash].js";
+
+            const pkg = dominantPackage(chunk.moduleIds);
+            return pkg ? `assets/${pkg}-[hash].js` : "assets/[name]-[hash].js";
+          },
         },
       },
     },
-  },
+  };
 });
