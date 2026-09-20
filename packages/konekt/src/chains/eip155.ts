@@ -74,22 +74,33 @@ export function parseSwitchChainId(params: unknown): number | undefined {
   return Number.isFinite(next) ? next : undefined;
 }
 
+type EvmAccount = { chainId: number; address: string };
+
+function evmAccounts(namespaces: Session["namespaces"] | undefined): EvmAccount[] {
+  const parsed: EvmAccount[] = [];
+  for (const a of namespaces?.eip155?.accounts ?? []) {
+    const account = parseCaipAccount(a);
+    if (!account) continue;
+    const chainId = Number(account.chainId.split(":")[1]);
+    if (!Number.isFinite(chainId)) continue;
+    parsed.push({ chainId, address: account.address });
+  }
+  return parsed;
+}
+
 /**
  * Extracts EVM state from an approved session.
  *
- * The first approved EVM account determines the initial chain. Duplicate addresses across approved
- * EVM chains are returned once.
+ * The first approved EVM account determines the chain. Duplicate addresses across approved EVM
+ * chains are returned once. This is the wallet's view of the session, which may name chains the
+ * provider was never configured with; the adapter picks its active chain with
+ * {@link selectableChainIds}.
  */
 export function parseAccounts(session: { namespaces: Session["namespaces"] } | undefined): {
   chainId: number;
   accounts: string[];
 } {
-  const parsed: { chainId: number; address: string }[] = [];
-  for (const a of session?.namespaces.eip155?.accounts ?? []) {
-    const account = parseCaipAccount(a);
-    if (!account) continue;
-    parsed.push({ chainId: Number(account.chainId.split(":")[1]), address: account.address });
-  }
+  const parsed = evmAccounts(session?.namespaces);
   const first = parsed[0];
   if (!first) return { chainId: 0, accounts: [] };
   return { chainId: first.chainId, accounts: [...new Set(parsed.map((p) => p.address))] };
@@ -97,9 +108,9 @@ export function parseAccounts(session: { namespaces: Session["namespaces"] } | u
 
 /** Properties added to a provider when at least one EVM chain is configured. */
 export type EvmExt = {
-  /** Active decimal EVM chain ID. */
+  /** Active decimal EVM chain ID. Always one of the configured chains. */
   chainId: number;
-  /** Unique EVM addresses approved in the current session. */
+  /** Unique EVM addresses approved in the current session on configured chains. */
   accounts: string[];
 };
 
@@ -129,10 +140,44 @@ export type ChainDefinition = {
   rpcUrls?: { default?: { http?: readonly string[] | undefined } | undefined } | undefined;
 };
 
+function configuredChainIds(ctx: Ctx): number[] {
+  const ids: number[] = [];
+  for (const c of ctx.chains) {
+    if (c.namespace !== "eip155") continue;
+    ids.push(Number(c.id.split(":")[1]));
+  }
+  return ids;
+}
+
+/**
+ * Chains the active chain may move to: configured here and approved by the wallet, in the order
+ * the session lists them.
+ *
+ * A wallet settles and updates namespaces verbatim, so it can approve, and announce `chainChanged`
+ * for, a chain that was never proposed. Requests carry the active chain to the wallet and consumers
+ * such as wagmi compare it against their own configuration, so it stays a configured chain.
+ */
+function selectableChainIds(ctx: Ctx, namespaces: Session["namespaces"] | undefined): number[] {
+  const configured = configuredChainIds(ctx);
+  return [...new Set(evmAccounts(namespaces).map((a) => a.chainId))].filter((id) => configured.includes(id));
+}
+
+function adoptActiveChainId(ctx: Ctx, namespaces: Session["namespaces"] | undefined) {
+  const [next] = selectableChainIds(ctx, namespaces);
+  if (next !== undefined) ctx.setActiveChainId("eip155", `eip155:${next}`);
+}
+
+/** Approved addresses on configured chains. Addresses approved on other chains are not usable here. */
+function configuredAddresses(ctx: Ctx, namespaces: Session["namespaces"] | undefined): string[] {
+  const configured = configuredChainIds(ctx);
+  const approved = evmAccounts(namespaces).filter((a) => configured.includes(a.chainId));
+  return [...new Set(approved.map((a) => a.address))];
+}
+
 function chainIdOf(ctx: Ctx): number {
   const active = ctx.activeChainId("eip155");
   if (active) return Number(active.split(":")[1]);
-  return parseAccounts(ctx.session()).chainId;
+  return configuredChainIds(ctx)[0] ?? 0;
 }
 
 function unauthorized(method: string) {
@@ -146,12 +191,16 @@ function handle(req: RpcRequest, ctx: Ctx): Promise<unknown> | unknown {
     case "eth_accounts":
     case "eth_requestAccounts":
       if (!ctx.session()) throw unauthorized(req.method);
-      return parseAccounts(ctx.session()).accounts;
+      return configuredAddresses(ctx, ctx.session()?.namespaces);
     case "wallet_switchEthereumChain": {
       const next = parseSwitchChainId(req.params);
       if (next === undefined) throw new ProviderRpcError(RpcErrorCode.invalidParams, "Invalid params");
-      const approved = ctx.session()?.namespaces.eip155?.accounts?.some((a) => a.startsWith(`eip155:${next}:`));
-      if (approved) {
+      if (!configuredChainIds(ctx).includes(next))
+        throw new ProviderRpcError(
+          RpcErrorCode.invalidParams,
+          `Chain "eip155:${next}" is not configured. Add it to chains before switching to it.`,
+        );
+      if (selectableChainIds(ctx, ctx.session()?.namespaces).includes(next)) {
         ctx.setActiveChainId("eip155", `eip155:${next}`);
         ctx.emit("chainChanged", toHexChain(next));
         return null;
@@ -187,7 +236,8 @@ function handle(req: RpcRequest, ctx: Ctx): Promise<unknown> | unknown {
 function onEvent(name: string, data: unknown, _chainId: string | undefined, ctx: Ctx) {
   if (name === "chainChanged") {
     const next = Number(data);
-    if (Number.isFinite(next) && next > 0) ctx.setActiveChainId("eip155", `eip155:${next}`);
+    if (selectableChainIds(ctx, ctx.session()?.namespaces).includes(next))
+      ctx.setActiveChainId("eip155", `eip155:${next}`);
     ctx.emit("chainChanged", (typeof data === "string" ? data : toHexChain(next)) as Hex);
     return;
   }
@@ -196,8 +246,9 @@ function onEvent(name: string, data: unknown, _chainId: string | undefined, ctx:
     return;
   }
   if (name === "session_update") {
-    const parsed = parseAccounts({ namespaces: data as Session["namespaces"] });
-    ctx.emit("accountsChanged", parsed.accounts);
+    const namespaces = data as Session["namespaces"];
+    adoptActiveChainId(ctx, namespaces);
+    ctx.emit("accountsChanged", configuredAddresses(ctx, namespaces));
     ctx.emit("chainChanged", toHexChain(chainIdOf(ctx)));
   }
 }
@@ -214,13 +265,12 @@ export const evmAdapter: ChainAdapter<EvmExt> = {
         return chainIdOf(ctx);
       },
       get accounts() {
-        return parseAccounts(ctx.session()).accounts;
+        return configuredAddresses(ctx, ctx.session()?.namespaces);
       },
     };
   },
   onSettle(session, ctx) {
-    const parsed = parseAccounts(session);
-    if (parsed.chainId) ctx.setActiveChainId("eip155", `eip155:${parsed.chainId}`);
+    adoptActiveChainId(ctx, session.namespaces);
   },
   onEvent,
 };

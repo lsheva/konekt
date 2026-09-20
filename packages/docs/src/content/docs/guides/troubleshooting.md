@@ -97,9 +97,9 @@ chains: [evm(1, { read: http("https://ethereum.example-rpc.com") })];
 
 Configure `read` on every EVM chain you read from. See [Chains and networks](../chains/#add-json-rpc-reads).
 
-### Reads return data from the wrong network
+### The wallet is on a chain your app did not configure
 
-The wallet switched to a chain that is not in your `chains` configuration, and reads fell back to the first configured EVM chain’s transport. Configure every network your app supports, and treat `chainChanged` for an unknown chain as an unsupported-network state.
+`chainChanged` reaches your listener with the wallet’s chain, but `provider.chainId` stays on a configured chain, so requests and reads never target a network you did not configure. Configure every network your app supports, and show an unsupported-network state when the event names an unknown chain.
 
 ### `chainChanged` gives a value that is not hex
 
