@@ -41,7 +41,15 @@ test("wallet-initiated chain and account events surface as EIP-1193", { skip, ti
   await ctx.wallet.emit("accountsChanged", ["0x70997970C51812dc3A010C7d01b50e0d17dc79C8"]);
   assert.equal(await chain, "0xa");
   assert.deepEqual(await accounts, ["0x70997970C51812dc3A010C7d01b50e0d17dc79C8"]);
-  assert.equal(ctx.provider.chainId, 10, "a wallet-initiated switch must move the active chain, not just emit");
+  assert.equal(ctx.provider.chainId, 1, "an unconfigured chain must surface as an event without being adopted");
+});
+
+test("a wallet switch to a configured chain moves the active chain", { skip, timeout: 30_000 }, async (t) => {
+  const ctx = await connected(t, [1, 10]);
+  const chain = new Promise<string>((resolve) => ctx.provider.once("chainChanged", resolve));
+  await ctx.wallet.emit("chainChanged", "0xa");
+  assert.equal(await chain, "0xa");
+  assert.equal(ctx.provider.chainId, 10);
 });
 
 test("wallet disconnect surfaces as EIP-1193 disconnect", { skip, timeout: 30_000 }, async (t) => {

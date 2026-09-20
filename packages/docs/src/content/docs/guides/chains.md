@@ -140,13 +140,13 @@ An explicit `read` overrides the definition’s URL, as in `evm(mainnet, { read:
 For a network outside the named set, import its definition from `viem/chains` and pass it to `evm()` the same way.
 
 :::caution[Configure `read` on every EVM chain you read from]
-If the wallet switches to an EVM chain that is not in your `chains` configuration, later reads fall back to the first configured EVM chain’s transport and answer with data from the wrong network. Configure every chain your app supports, and treat `chainChanged` for an unknown chain as an unsupported-network state in your UI.
+A JSON-RPC read uses the active chain’s transport and fails with `4200` when that chain has none. A wallet may also switch to a chain outside your `chains` configuration: Konekt forwards its `chainChanged`, but the active chain stays one you configured, so no read silently answers from another network. Configure every chain your app supports, and treat `chainChanged` for an unknown chain as an unsupported-network state in your UI.
 :::
 
 After you configure EVM, the provider has two additional properties:
 
-- `provider.chainId` — the active decimal EVM chain ID;
-- `provider.accounts` — the unique EVM addresses approved by the wallet.
+- `provider.chainId` — the active decimal EVM chain ID, always one of the chains you configured;
+- `provider.accounts` — the unique EVM addresses the wallet approved on those chains.
 
 ## Other namespaces
 

@@ -179,6 +179,31 @@ test("switching chains moves both provider.chainId and where requests go", async
   assert.deepEqual(calls, ["eip155:8453:personal_sign"]);
 });
 
+test("a settle that approves an unconfigured chain first stays on a configured one", async () => {
+  const provider = await Provider.create(
+    { projectId: "x", metadata, chains: [evm(84532)] },
+    {
+      session: fakeSession(async () => "ok", {
+        eip155: {
+          accounts: ["eip155:1:0xabc", "eip155:84532:0xdef"],
+          methods: ["personal_sign", "wallet_switchEthereumChain"],
+          events: [],
+        },
+      }),
+    },
+  );
+
+  await provider.connect();
+  assert.equal(provider.chainId, 84532);
+  assert.equal(await provider.request({ method: "eth_chainId" }), "0x14a34");
+  assert.deepEqual(provider.accounts, ["0xdef"], "an address approved only on an unconfigured chain is not usable");
+  await assert.rejects(
+    () => provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] }),
+    (e: unknown) => e instanceof ProviderRpcError && e.code === RpcErrorCode.invalidParams,
+  );
+  assert.equal(provider.chainId, 84532);
+});
+
 test("an explicit chainId reaches an approved chain without moving the active one", async () => {
   const calls: string[] = [];
   const provider = await Provider.create(

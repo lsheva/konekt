@@ -3,32 +3,12 @@ import { test } from "node:test";
 import { evm } from "../src/chains/eip155.ts";
 import { decrypt, deriveSymKey, encrypt, generateX25519, hashKey } from "../src/kernel/crypto.ts";
 import { Provider } from "../src/kernel/provider.ts";
-import { type Relay, SessionClient } from "../src/kernel/session.ts";
+import { SessionClient } from "../src/kernel/session.ts";
 import { parseUri } from "../src/kernel/uri.ts";
+import { FakeRelay, paired } from "./fake-relay.ts";
 import { METADATA } from "./helpers.ts";
 
-class FakeRelay implements Relay {
-  #onMessage: ((topic: string, message: string) => void) | undefined;
-  onProposal: ((topic: string, message: string) => Promise<void>) | undefined;
-  connects = 0;
-
-  async connect() {
-    this.connects++;
-  }
-  async close() {}
-  async subscribe(_topic: string) {}
-  async publish(_topic: string, _message: string, _opts: { ttl: number; tag: number; prompt?: boolean }) {}
-  async proposeSession(topic: string, message: string) {
-    const onProposal = this.onProposal;
-    if (onProposal) queueMicrotask(() => void onProposal(topic, message));
-  }
-  onMessage(fn: (topic: string, message: string) => void) {
-    this.#onMessage = fn;
-  }
-  emit(topic: string, message: string) {
-    this.#onMessage?.(topic, message);
-  }
-}
+const ADDRESS = "0x0000000000000000000000000000000000000001";
 
 test("Provider construction stays synchronous and does not connect", () => {
   const relay = new FakeRelay();
@@ -75,7 +55,7 @@ test("proposal response derives the key before a back-to-back settlement", async
         relay: { protocol: "irn" },
         namespaces: {
           eip155: {
-            accounts: ["eip155:1:0x0000000000000000000000000000000000000001"],
+            accounts: [`eip155:1:${ADDRESS}`],
             methods: [],
             events: [],
           },
@@ -92,4 +72,33 @@ test("proposal response derives the key before a back-to-back settlement", async
   const session = await client.connect();
   assert.equal(session.namespaces.eip155?.accounts?.length, 1);
   await client.disconnect();
+});
+
+test("a wallet chainChanged for an unconfigured chain surfaces without moving the active chain", async () => {
+  const { provider, wallet } = await paired({
+    chains: [evm(1)],
+    namespaces: { eip155: { accounts: [`eip155:1:${ADDRESS}`, `eip155:10:${ADDRESS}`], methods: [], events: [] } },
+  });
+  assert.equal(provider.chainId, 1);
+
+  const changed = new Promise<string>((resolve) => provider.once("chainChanged", resolve));
+  await wallet.emit("chainChanged", "0xa", "eip155:10");
+
+  assert.equal(await changed, "0xa", "the app must still see the wallet's chain, to show a wrong-network state");
+  assert.equal(provider.chainId, 1);
+  assert.equal(await provider.request({ method: "eth_chainId" }), "0x1");
+});
+
+test("a wallet chainChanged for a configured chain moves the active chain", async () => {
+  const { provider, wallet } = await paired({
+    chains: [evm(1), evm(10)],
+    namespaces: { eip155: { accounts: [`eip155:1:${ADDRESS}`, `eip155:10:${ADDRESS}`], methods: [], events: [] } },
+  });
+  assert.equal(provider.chainId, 1);
+
+  const changed = new Promise<string>((resolve) => provider.once("chainChanged", resolve));
+  await wallet.emit("chainChanged", "0xa", "eip155:10");
+
+  assert.equal(await changed, "0xa");
+  assert.equal(provider.chainId, 10);
 });

@@ -13,7 +13,7 @@ These are production bundle measurements from the repository’s `pnpm size` che
 
 | Import | Minified + gzip |
 | --- | ---: |
-| `Provider` + `evm` initial chunk | 9.91 kB |
+| `Provider` + `evm` initial chunk | 10.00 kB |
 | ChaCha20-Poly1305 lazy chunk | 4.84 kB |
 | Ed25519/X25519 compatibility chunk | 13.80 kB |
 | SHA-256/HKDF compatibility chunk | 2.96 kB |
@@ -41,7 +41,7 @@ pnpm size
 
 ## Compared in a real Vite app
 
-The table above is each Konekt import on its own, without React. The headless path through the first encrypted message is 14.75 kB, the wallet modal and styles are 13.28 kB, and together they are a 28.03 kB connect stack. The numbers that show up in a browser are larger, and so is the gap versus the official stack, because `@walletconnect/ethereum-provider` and AppKit emit many extra chunks that package-main-bundle tools omit.
+The table above is each Konekt import on its own, without React. The headless path through the first encrypted message is 14.84 kB, the wallet modal and styles are 13.28 kB, and together they are a 28.11 kB connect stack. The numbers that show up in a browser are larger, and so is the gap versus the official stack, because `@walletconnect/ethereum-provider` and AppKit emit many extra chunks that package-main-bundle tools omit.
 
 Four matched React apps in this repository each connect Ethereum and show an address. They share Vite, React 19, and the same tiny shell. `react` and `react-dom` are marked external, so the totals are the wallet stack. The only other difference is which wallet library each app imports:
 
@@ -51,8 +51,8 @@ Four matched React apps in this repository each connect Ethereum and show an add
 | --- | ---: | ---: |
 | WalletConnect | 145.74 kB | 538.06 kB |
 | WalletConnect + AppKit | 721.26 kB | 1079.28 kB |
-| Konekt | 10.95 kB | 33.68 kB |
-| Konekt + UI | 18.98 kB | 45.44 kB |
+| Konekt | 11.03 kB | 33.76 kB |
+| Konekt + UI | 19.06 kB | 45.52 kB |
 
 <!-- app-size-report:end -->
 
@@ -63,7 +63,7 @@ Four matched React apps in this repository each connect Ethereum and show an add
 
 First load is the JavaScript and CSS the production `index.html` requests: the entry script, stylesheets, and modulepreloads. Overall is every JS, CSS, WASM, and font file Vite emitted. Each file is minified, gzipped at level 9, then summed.
 
-Headless Konekt is **92.5%** smaller on first load and **93.7%** smaller overall than the official Ethereum Provider. Konekt with UI is **97.4%** smaller on first load and **95.8%** smaller overall than AppKit.
+Headless Konekt is **92.4%** smaller on first load and **93.7%** smaller overall than the official Ethereum Provider. Konekt with UI is **97.4%** smaller on first load and **95.8%** smaller overall than AppKit.
 
 The Ethereum Provider still emits AppKit modal chunks as dynamic imports even with `showQrModal: false`, which is why its overall size is far above its first load. AppKit’s first load stays large because `createAppKit()` module-preloads wallet lists, email inputs, and related UI even when those features are disabled. The Konekt apps leave Noble compatibility chunks off the first load, the same way a modern-browser session would.
 
